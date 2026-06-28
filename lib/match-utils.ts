@@ -2,11 +2,12 @@ import type { Match } from './types'
 
 /**
  * Helper para exibir nome do time
- * Times com nome iniciando em "TBD-" são "A Definir"
+ * Times com nome iniciando em "TBD-" ou valor "Unknown" são "A Definir"
  */
 export function getTeamDisplayName(teamName: string): string {
   if (!teamName) return 'A Definir'
-  return teamName.startsWith('TBD-') || teamName.startsWith('TBD') ? 'A Definir' : teamName
+  if (teamName.startsWith('TBD') || teamName === 'Unknown' || teamName === 'unknown') return 'A Definir'
+  return teamName
 }
 
 /**
@@ -15,7 +16,7 @@ export function getTeamDisplayName(teamName: string): string {
  */
 export function getTeamDisplayLogo(logo?: string | null, teamName?: string): string | null {
   if (!logo || !teamName) return null
-  if (teamName.startsWith('TBD')) return null
+  if (teamName.startsWith('TBD') || teamName === 'Unknown' || teamName === 'unknown') return null
   return logo
 }
 

@@ -20,7 +20,7 @@ interface PlayerRow {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function abbr(teamName: string): string {
-  if (!teamName || teamName.startsWith('TBD') || teamName === 'A Definir') return '---'
+  if (!teamName || teamName.startsWith('TBD') || teamName === 'A Definir' || teamName === 'Unknown' || teamName === 'unknown') return '---'
   return teamName.slice(0, 3).toUpperCase()
 }
 
