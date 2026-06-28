@@ -20,12 +20,13 @@ const W = 140  // match card width (px)
 const C = 13   // connector strip width (px)
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
-function sortByNum(arr: Match[], re: RegExp) {
-  return [...arr].sort(
-    (a, b) =>
-      (parseInt((a.roundLabel ?? '').match(re)?.[1] ?? '99')) -
-      (parseInt((b.roundLabel ?? '').match(re)?.[1] ?? '99'))
-  )
+// Extrai o ÚLTIMO número do roundLabel — ex: "16 Avos de Final - R32-3" → 3
+function bracketSeq(label: string): number {
+  const nums = (label ?? '').match(/\d+/g)
+  return nums ? parseInt(nums[nums.length - 1]) : 99
+}
+function sortByNum(arr: Match[]) {
+  return [...arr].sort((a, b) => bracketSeq(a.roundLabel) - bracketSeq(b.roundLabel))
 }
 
 function padNull(arr: Match[], n: number): (Match | null)[] {
@@ -210,14 +211,14 @@ export default function BracketPage() {
   const ko = matches.filter(m => m.stage !== 'group_stage')
 
   // Fixed stages (names don't change)
-  const qfAll = sortByNum(ko.filter(m => m.stage === 'quarter_finals'), /(\d+)/)
+  const qfAll = sortByNum(ko.filter(m => m.stage === 'quarter_finals'))
   const sfAll = ko.filter(m => m.stage === 'semi_finals')
   const fin = ko.find(m => m.stage === 'final') ?? null
 
   // First/second knockout rounds: detect flexibly.
   // Backend may use 'round_of_32' OR 'round_of_16' for Copa 2026's "16 avos".
-  const r32Named = sortByNum(ko.filter(m => m.stage === 'round_of_32'), /(\d+)/)
-  const r16Named = sortByNum(ko.filter(m => m.stage === 'round_of_16'), /(\d+)/)
+  const r32Named = sortByNum(ko.filter(m => m.stage === 'round_of_32'))
+  const r16Named = sortByNum(ko.filter(m => m.stage === 'round_of_16'))
 
   // If round_of_32 is populated → use it. Otherwise fall back to count-based:
   // round_of_16 with > 8 matches → those ARE the "16 avos" (all 16 are treated as r32).
