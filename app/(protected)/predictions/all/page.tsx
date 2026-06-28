@@ -126,7 +126,7 @@ export default function AllPredictionsPage() {
   const playerMap: Record<string, PlayerRow> = {}
   boardData.forEach(board => {
     board.predictions?.forEach((pred: any) => {
-      const userId   = pred.userId   ?? pred.user?.id   ?? pred.user?._id
+      const userId = pred.userId ?? pred.user?.id ?? pred.user?._id
       const userName = pred.userName ?? pred.user?.name ?? pred.user?.email ?? 'Usuário'
       if (!userId) return
       if (!playerMap[userId]) {

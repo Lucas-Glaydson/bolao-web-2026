@@ -211,7 +211,7 @@ export default function BracketPage() {
   // Fixed stages (names don't change)
   const qfAll = sortByNum(ko.filter(m => m.stage === 'quarter_finals'), /(\d+)/)
   const sfAll = ko.filter(m => m.stage === 'semi_finals')
-  const fin   = ko.find(m => m.stage === 'final') ?? null
+  const fin = ko.find(m => m.stage === 'final') ?? null
 
   // First/second knockout rounds: detect flexibly.
   // Backend may use 'round_of_32' OR 'round_of_16' for Copa 2026's "16 avos".
@@ -233,12 +233,12 @@ export default function BracketPage() {
   const hasR16 = r16All.length > 0 || hasR32
 
   // ── Split into left (1-8) and right (9-16) halves ───────────────────────
-  const r32L = padNull(r32All.slice(0, 8),  8)
+  const r32L = padNull(r32All.slice(0, 8), 8)
   const r32R = padNull(r32All.slice(8, 16), 8)
-  const r16L = padNull(r16All.slice(0, 4),  4)
-  const r16R = padNull(r16All.slice(4, 8),  4)
-  const qfL  = padNull(qfAll.slice(0, 2),   2)
-  const qfR  = padNull(qfAll.slice(2, 4),   2)
+  const r16L = padNull(r16All.slice(0, 4), 4)
+  const r16R = padNull(r16All.slice(4, 8), 4)
+  const qfL = padNull(qfAll.slice(0, 2), 2)
+  const qfR = padNull(qfAll.slice(2, 4), 2)
   const sfL: (Match | null)[] = [sfAll[0] ?? null]
   const sfR: (Match | null)[] = [sfAll[1] ?? null]
 
@@ -246,10 +246,10 @@ export default function BracketPage() {
   const totalH = S * 8  // 576px
 
   // ── Column label widths ─────────────────────────────────────────────────
-  const r32LabelW  = W + C               // slots + arm
-  const r16LabelW  = C + W + C           // inlet + slots + arm
-  const qfLabelW   = C + W + C
-  const sfLabelW   = C + W + C
+  const r32LabelW = W + C               // slots + arm
+  const r16LabelW = C + W + C           // inlet + slots + arm
+  const qfLabelW = C + W + C
+  const sfLabelW = C + W + C
   const finalLabelW = W
 
   return (
@@ -293,11 +293,11 @@ export default function BracketPage() {
           <div className="flex mb-2" style={{ minWidth: 'max-content' }}>
             {hasR32 && <ColLabel label="16 Avos" width={r32LabelW} />}
             {hasR16 && <ColLabel label="Oitavas" width={r16LabelW} />}
-            <ColLabel label="Quartas"   width={qfLabelW} />
+            <ColLabel label="Quartas" width={qfLabelW} />
             <ColLabel label="Semifinal" width={sfLabelW} />
             <ColLabel label="FINAL" width={finalLabelW} highlight />
             <ColLabel label="Semifinal" width={sfLabelW} />
-            <ColLabel label="Quartas"   width={qfLabelW} />
+            <ColLabel label="Quartas" width={qfLabelW} />
             {hasR16 && <ColLabel label="Oitavas" width={r16LabelW} />}
             {hasR32 && <ColLabel label="16 Avos" width={r32LabelW} />}
           </div>
@@ -310,8 +310,8 @@ export default function BracketPage() {
             {/* R32 left (8 matches) */}
             {hasR32 && (
               <>
-                <Slots matches={r32L} slotH={S}     viewMode={viewMode} predsMap={predsMap} />
-                <RightArm count={8}  slotH={S} />
+                <Slots matches={r32L} slotH={S} viewMode={viewMode} predsMap={predsMap} />
+                <RightArm count={8} slotH={S} />
               </>
             )}
 
@@ -320,7 +320,7 @@ export default function BracketPage() {
               <>
                 {hasR32 && <Horiz count={4} slotH={S * 2} />}
                 <Slots matches={r16L} slotH={S * 2} viewMode={viewMode} predsMap={predsMap} />
-                <RightArm count={4}  slotH={S * 2} />
+                <RightArm count={4} slotH={S * 2} />
               </>
             )}
 
@@ -354,8 +354,8 @@ export default function BracketPage() {
                   🏆 {fin.winner === 'home'
                     ? getTeamDisplayName(fin.homeTeam)
                     : fin.winner === 'away'
-                    ? getTeamDisplayName(fin.awayTeam)
-                    : '–'}
+                      ? getTeamDisplayName(fin.awayTeam)
+                      : '–'}
                 </div>
               )}
             </div>

@@ -106,13 +106,13 @@ export default function AnalysisPage() {
               </div>
               <div className="p-4 rounded-lg bg-slate-800/50">
                 <p className="text-sm text-slate-400 mb-2">Fase Atual</p>
-                <Badge variant="primary">{stats?.currentStage || 'Fase Inicial'}</Badge>
+                <Badge variant="primary">{(stats as any)?.currentStage || 'Fase Inicial'}</Badge>
               </div>
               <div className="p-4 rounded-lg bg-slate-800/50">
                 <p className="text-sm text-slate-400 mb-2">Fases Abertas</p>
                 <div className="flex flex-wrap gap-2 mt-2">
-                  {stats?.openStages && stats.openStages.length > 0 ? (
-                    stats.openStages.map((stage: string) => (
+                  {(stats as any)?.openStages && (stats as any).openStages.length > 0 ? (
+                    (stats as any).openStages.map((stage: string) => (
                       <Badge key={stage} variant="success">
                         {stage}
                       </Badge>

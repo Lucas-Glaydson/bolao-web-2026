@@ -176,13 +176,12 @@ export default function GroupStagePage() {
                       return (
                         <div key={match.id || match._id} className="grid grid-cols-[1fr_auto_1fr] items-center gap-1 text-xs">
                           <span className="text-slate-300 truncate text-right">{match.homeTeam}</span>
-                          <span className={`font-mono font-bold px-2 py-0.5 rounded text-center whitespace-nowrap ${
-                            isLive
+                          <span className={`font-mono font-bold px-2 py-0.5 rounded text-center whitespace-nowrap ${isLive
                               ? 'bg-red-900/40 text-red-400 animate-pulse'
                               : hasScore
-                              ? 'bg-slate-700 text-white'
-                              : 'text-slate-500'
-                          }`}>
+                                ? 'bg-slate-700 text-white'
+                                : 'text-slate-500'
+                            }`}>
                             {hasScore ? `${match.officialHomeScore}×${match.officialAwayScore}` : '–×–'}
                           </span>
                           <span className="text-slate-300 truncate">{match.awayTeam}</span>

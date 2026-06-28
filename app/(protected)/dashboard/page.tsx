@@ -51,24 +51,24 @@ export default function DashboardPage() {
           predictionService.getAllPredictionsBoard(),
         ])
 
-        const statsData     = statsRes.status     === 'fulfilled' ? statsRes.value       : null
-        const rankingData   = rankingRes.status   === 'fulfilled' ? rankingRes.value     : []
-        const matchesData   = matchesRes.status   === 'fulfilled' ? matchesRes.value     : []
+        const statsData = statsRes.status === 'fulfilled' ? statsRes.value : null
+        const rankingData = rankingRes.status === 'fulfilled' ? rankingRes.value : []
+        const matchesData = matchesRes.status === 'fulfilled' ? matchesRes.value : []
         const predictionsData = predictionsRes.status === 'fulfilled' ? predictionsRes.value : []
-        const boardRaw      = boardRes.status     === 'fulfilled' ? boardRes.value       : []
+        const boardRaw = boardRes.status === 'fulfilled' ? boardRes.value : []
 
-        if (statsRes.status     === 'rejected') console.warn('stats:', statsRes.reason?.message ?? statsRes.reason)
-        if (rankingRes.status   === 'rejected') console.warn('ranking:', rankingRes.reason?.message ?? rankingRes.reason)
-        if (matchesRes.status   === 'rejected') console.warn('matches:', matchesRes.reason?.message ?? matchesRes.reason)
+        if (statsRes.status === 'rejected') console.warn('stats:', statsRes.reason?.message ?? statsRes.reason)
+        if (rankingRes.status === 'rejected') console.warn('ranking:', rankingRes.reason?.message ?? rankingRes.reason)
+        if (matchesRes.status === 'rejected') console.warn('matches:', matchesRes.reason?.message ?? matchesRes.reason)
         if (predictionsRes.status === 'rejected') console.warn('predictions:', predictionsRes.reason?.message ?? predictionsRes.reason)
-        if (boardRes.status     === 'rejected') console.warn('board:', boardRes.reason?.message ?? boardRes.reason)
+        if (boardRes.status === 'rejected') console.warn('board:', boardRes.reason?.message ?? boardRes.reason)
 
         setStats(statsData)
         setTopRanking((rankingData as any[]).slice(0, 5))
         setUpcomingMatches((matchesData as any[]).filter((m: any) => (m.status === 'scheduled' || m.status === 'live') && m.stage !== 'group_stage'))
         setMyPredictions(predictionsData as any)
         setBoardData(boardRaw as any)
-        
+
         // Retorna se há jogos ao vivo para configurar polling
         return (matchesData as any[]).some(isMatchLive)
       } catch (error: any) {
@@ -155,7 +155,7 @@ export default function DashboardPage() {
           <div className="p-6 space-y-3">
             <div className="flex items-center justify-between">
               <Award className="w-8 h-8 text-yellow-500" />
-              <span className="text-xl font-bold truncate max-w-[120px] block">{stats?.topScorer?.name || '-'}</span>
+              <span className="text-xl font-bold truncate max-w-[120px] block">{stats?.topScorer?.user?.name || '-'}</span>
             </div>
             <p className="text-sm text-slate-400">Maior Pontuador</p>
           </div>
@@ -280,7 +280,7 @@ export default function DashboardPage() {
                 return (
                   <div key={matchId} className="p-4 rounded-lg bg-slate-800/50 space-y-3">
                     <div className="flex items-center justify-between flex-wrap gap-2">
-                      <Badge variant="secondary">{STAGE_LABELS[match.stage]}</Badge>
+                      <Badge variant="default">{STAGE_LABELS[match.stage]}</Badge>
                       <Badge className={STATUS_COLORS[match.status]}>
                         {STATUS_LABELS[match.status]}
                       </Badge>
@@ -469,9 +469,9 @@ export default function DashboardPage() {
                         const finished = m.status === 'finished'
                         const bg = !pred ? ''
                           : !finished ? 'bg-slate-700/50 text-slate-300'
-                          : pred.exact ? 'bg-green-700 text-white'
-                          : pred.outcome ? 'bg-yellow-600 text-white'
-                          : 'bg-red-700 text-white'
+                            : pred.exact ? 'bg-green-700 text-white'
+                              : pred.outcome ? 'bg-yellow-600 text-white'
+                                : 'bg-red-700 text-white'
                         return (
                           <td key={mid} className="py-2 px-1 text-center border-r border-slate-800/50 last:border-r-0">
                             {pred ? (

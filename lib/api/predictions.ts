@@ -2,6 +2,7 @@ import { api } from './client'
 import type {
   Prediction,
   PredictionWithDetails,
+  PredictionWithUser,
   BoardPrediction,
   CreatePredictionDto,
 } from '@/lib/types'

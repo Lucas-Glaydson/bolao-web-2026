@@ -90,10 +90,10 @@ export default function StatisticsPage() {
               <Trophy className="w-8 h-8 text-yellow-500" />
               <h2 className="text-2xl font-bold">Maior Pontuador</h2>
             </div>
-              <div className="flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center justify-between flex-wrap gap-3">
               <div className="min-w-0">
-                <p className="text-2xl font-bold truncate">{stats.topScorer.name}</p>
-                <p className="text-slate-400 text-sm truncate">{stats.topScorer.email}</p>
+                <p className="text-2xl font-bold truncate">{stats.topScorer.user?.name}</p>
+                <p className="text-slate-400 text-sm truncate">{stats.topScorer.user?.email}</p>
               </div>
               <div className="text-right">
                 <p className="text-3xl font-bold text-yellow-500">{stats.topScorer.points}</p>

@@ -38,7 +38,7 @@ export function ManualScoreModal({
 
     setIsSubmitting(true)
     try {
-      await groupService.setManualScore(match._id, parseInt(homeScore), parseInt(awayScore))
+      await groupService.setManualScore(match.id ?? match._id ?? '', parseInt(homeScore), parseInt(awayScore))
       toast.success('Placar manual definido com sucesso!')
       onSuccess()
       onClose()
@@ -54,7 +54,7 @@ export function ManualScoreModal({
 
     setIsSubmitting(true)
     try {
-      await groupService.removeManualScore(match._id)
+      await groupService.removeManualScore(match.id ?? match._id ?? '')
       toast.success('Placar manual removido!')
       onSuccess()
       onClose()
@@ -77,7 +77,7 @@ export function ManualScoreModal({
             {match.group && `Grupo ${match.group} •`} {match.round && `Rodada ${match.round}`}
           </p>
           <p className="font-semibold">
-            {match.homeTeam.name} <span className="text-slate-500">vs</span> {match.awayTeam.name}
+            {match.homeTeam} <span className="text-slate-500">vs</span> {match.awayTeam}
           </p>
         </div>
 
@@ -90,7 +90,7 @@ export function ManualScoreModal({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="flex items-center gap-3">
             <div className="flex-1">
-              <label className="block text-sm mb-2">{match.homeTeam.name}</label>
+              <label className="block text-sm mb-2">{match.homeTeam}</label>
               <Input
                 type="number"
                 min="0"
@@ -105,7 +105,7 @@ export function ManualScoreModal({
             <span className="text-2xl text-slate-500 mt-6">×</span>
 
             <div className="flex-1">
-              <label className="block text-sm mb-2">{match.awayTeam.name}</label>
+              <label className="block text-sm mb-2">{match.awayTeam}</label>
               <Input
                 type="number"
                 min="0"

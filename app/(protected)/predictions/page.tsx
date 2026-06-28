@@ -33,7 +33,7 @@ export default function MyPredictionsPage() {
       ])
       setPredictions(predictionsData)
       setMatches(matchesData)
-      
+
       // Retorna se há jogos ao vivo
       return matchesData.some(isMatchLive)
     } catch (error) {
@@ -281,36 +281,34 @@ export default function MyPredictionsPage() {
                           homeScore !== '' && awayScore !== '' &&
                           parseInt(homeScore) === parseInt(awayScore) &&
                           isKnockoutStage(match) && (
-                          <div className="space-y-2">
-                            <p className="text-sm text-slate-400 text-center">
-                              Empate — Quem avança nos pênaltis?
-                            </p>
-                            <div className="grid grid-cols-2 gap-2">
-                              <button
-                                type="button"
-                                onClick={() => setTiebreakWinner('home')}
-                                className={`py-2 px-3 rounded-lg text-sm font-semibold border transition-colors ${
-                                  tiebreakWinner === 'home'
-                                    ? 'bg-green-600 border-green-500 text-white'
-                                    : 'bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600'
-                                }`}
-                              >
-                                {homeTeam}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setTiebreakWinner('away')}
-                                className={`py-2 px-3 rounded-lg text-sm font-semibold border transition-colors ${
-                                  tiebreakWinner === 'away'
-                                    ? 'bg-green-600 border-green-500 text-white'
-                                    : 'bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600'
-                                }`}
-                              >
-                                {awayTeam}
-                              </button>
+                            <div className="space-y-2">
+                              <p className="text-sm text-slate-400 text-center">
+                                Empate — Quem avança nos pênaltis?
+                              </p>
+                              <div className="grid grid-cols-2 gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setTiebreakWinner('home')}
+                                  className={`py-2 px-3 rounded-lg text-sm font-semibold border transition-colors ${tiebreakWinner === 'home'
+                                      ? 'bg-green-600 border-green-500 text-white'
+                                      : 'bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600'
+                                    }`}
+                                >
+                                  {homeTeam}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setTiebreakWinner('away')}
+                                  className={`py-2 px-3 rounded-lg text-sm font-semibold border transition-colors ${tiebreakWinner === 'away'
+                                      ? 'bg-green-600 border-green-500 text-white'
+                                      : 'bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600'
+                                    }`}
+                                >
+                                  {awayTeam}
+                                </button>
+                              </div>
                             </div>
-                          </div>
-                        )}
+                          )}
                         <div className="flex gap-2">
                           <Button
                             variant="primary"

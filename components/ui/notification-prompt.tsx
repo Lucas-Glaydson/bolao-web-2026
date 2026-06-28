@@ -115,7 +115,7 @@ export function NotificationToggle() {
 
   return (
     <Button
-      variant={permission === 'granted' ? 'success' : 'outline'}
+      variant={permission === 'granted' ? 'primary' : 'outline'}
       onClick={handleToggle}
       leftIcon={permission === 'granted' ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
     >

@@ -53,7 +53,7 @@ export function MatchCard({
 
     setIsSubmitting(true)
     try {
-      await predictionService.createOrUpdatePrediction(match.id || match._id, {
+      await predictionService.createOrUpdatePrediction(match.id ?? match._id ?? '', {
         homeScore: parseInt(homeScore),
         awayScore: parseInt(awayScore),
       })
@@ -74,12 +74,12 @@ export function MatchCard({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {match.roundLabel && (
-              <Badge variant="secondary" className="text-xs">
+              <Badge variant="default" className="text-xs">
                 {match.roundLabel}
               </Badge>
             )}
             {match.stage && (
-              <Badge variant="secondary" className="text-xs">
+              <Badge variant="default" className="text-xs">
                 {STAGE_LABELS[match.stage]}
               </Badge>
             )}

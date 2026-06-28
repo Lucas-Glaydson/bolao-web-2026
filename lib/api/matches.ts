@@ -33,10 +33,10 @@ export const matchService = {
   async getUpcomingMatches(): Promise<UpcomingMatch[]> {
     if (APP_CONFIG.USE_MOCK_DATA) {
       const upcoming = MOCK_MATCHES
-        .filter(m => m.status === 'SCHEDULED')
+        .filter(m => m.status === 'scheduled')
         .map(m => ({
           ...m,
-          deadline: m.utcDate,
+          deadline: m.kickoffAt,
           canPredict: true,
         }))
       return Promise.resolve(upcoming)
