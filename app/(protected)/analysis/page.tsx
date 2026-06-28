@@ -100,7 +100,7 @@ export default function AnalysisPage() {
             <div className="space-y-3">
               <div className="p-4 rounded-lg bg-slate-800/50">
                 <p className="text-sm text-slate-400 mb-2">Status do Bolão</p>
-                <Badge variant={stats && stats.finishedMatches > 0 ? 'success' : 'secondary'}>
+                <Badge variant={stats && stats.finishedMatches > 0 ? 'success' : 'default'}>
                   {stats && stats.finishedMatches > 0 ? 'Em Andamento' : 'Aguardando Início'}
                 </Badge>
               </div>
