@@ -20,7 +20,8 @@ import {
   getTeamDisplayLogo,
   formatKickoff,
   isMatchLive,
-  canMakePrediction
+  canMakePrediction,
+  isKnockoutStage,
 } from '@/lib/match-utils'
 import type { DashboardStats, RankingEntry, Match, PredictionWithDetails, BoardPrediction } from '@/lib/types'
 import toast from 'react-hot-toast'
@@ -33,6 +34,7 @@ export default function DashboardPage() {
   const [selectedMatch, setSelectedMatch] = useState<string | null>(null)
   const [homeScore, setHomeScore] = useState('')
   const [awayScore, setAwayScore] = useState('')
+  const [tiebreakWinner, setTiebreakWinner] = useState<'home' | 'away' | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [boardData, setBoardData] = useState<BoardPrediction[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -96,16 +98,29 @@ export default function DashboardPage() {
       toast.error('Preencha ambos os placares')
       return
     }
+    const home = parseInt(homeScore)
+    const away = parseInt(awayScore)
+    const match = upcomingMatches.find(m => (m.id || m._id) === matchId)
+    const isDraw = home === away
+    const knockout = match ? isKnockoutStage(match) : false
+
+    if (isDraw && knockout && !tiebreakWinner) {
+      toast.error('Selecione qual time avança nos pênaltis')
+      return
+    }
+
     setSubmitting(true)
     try {
       await predictionService.createOrUpdatePrediction(matchId, {
-        homeScore: parseInt(homeScore),
-        awayScore: parseInt(awayScore),
+        homeScore: home,
+        awayScore: away,
+        ...(isDraw && knockout ? { tiebreakWinner: tiebreakWinner! } : {}),
       })
       toast.success('Palpite salvo!')
       setSelectedMatch(null)
       setHomeScore('')
       setAwayScore('')
+      setTiebreakWinner(null)
       const predictionsData = await predictionService.getMyPredictions()
       setMyPredictions(predictionsData)
     } catch (error: any) {
@@ -319,6 +334,7 @@ export default function DashboardPage() {
                               setSelectedMatch(matchId)
                               setHomeScore(String(existing.predictedHomeScore ?? existing.homeScore ?? ''))
                               setAwayScore(String(existing.predictedAwayScore ?? existing.awayScore ?? ''))
+                              setTiebreakWinner(existing.tiebreakWinner ?? null)
                             }}
                           >
                             Editar
@@ -341,9 +357,10 @@ export default function DashboardPage() {
                                 setSelectedMatch(matchId)
                                 setHomeScore('')
                                 setAwayScore('')
+                                setTiebreakWinner(null)
                               }
                             }}
-                            onChange={(e) => setHomeScore(e.target.value)}
+                            onChange={(e) => { setHomeScore(e.target.value); setTiebreakWinner(null) }}
                             className="text-center"
                           />
                           <span className="text-center text-slate-400">×</span>
@@ -357,12 +374,48 @@ export default function DashboardPage() {
                                 setSelectedMatch(matchId)
                                 setHomeScore('')
                                 setAwayScore('')
+                                setTiebreakWinner(null)
                               }
                             }}
-                            onChange={(e) => setAwayScore(e.target.value)}
+                            onChange={(e) => { setAwayScore(e.target.value); setTiebreakWinner(null) }}
                             className="text-center"
                           />
                         </div>
+
+                        {/* Tiebreaker: empate em fase eliminatória */}
+                        {selectedMatch === matchId &&
+                          homeScore !== '' && awayScore !== '' &&
+                          parseInt(homeScore) === parseInt(awayScore) &&
+                          isKnockoutStage(match) && (
+                            <div className="space-y-1.5">
+                              <p className="text-xs text-slate-400 text-center">Empate — Quem avança nos pênaltis?</p>
+                              <div className="grid grid-cols-2 gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setTiebreakWinner('home')}
+                                  className={`py-1.5 px-2 rounded-lg text-xs font-semibold border transition-colors ${
+                                    tiebreakWinner === 'home'
+                                      ? 'bg-green-600 border-green-500 text-white'
+                                      : 'bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600'
+                                  }`}
+                                >
+                                  {homeTeam}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setTiebreakWinner('away')}
+                                  className={`py-1.5 px-2 rounded-lg text-xs font-semibold border transition-colors ${
+                                    tiebreakWinner === 'away'
+                                      ? 'bg-green-600 border-green-500 text-white'
+                                      : 'bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600'
+                                  }`}
+                                >
+                                  {awayTeam}
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
                         <div className="flex gap-2">
                           <Button
                             variant="primary"
