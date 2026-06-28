@@ -15,15 +15,15 @@ const steps = [
   },
   {
     icon: Target,
-    title: 'Pontuação por Fase',
+    title: 'Sistema de Pontuação',
     description:
-      '16 Avos, Oitavas e Quartas: 1 ponto cada | Semifinal e Final: 2 pontos cada. As fases finais valem mais!',
+      'Resultado certo: 1pt | Resultado + quem avança nos pênaltis: 2pts | Placar exato: 3pts | Placar exato + pênalti: 4pts.',
   },
   {
     icon: Award,
-    title: 'Acertar o Placar Exato',
+    title: 'Maximize sua Pontuação',
     description:
-      'Se você acertar o placar EXATO da partida, ganha DOBRO de pontos! Por exemplo: acertar 2x1 nas quartas vale 2 pontos (1x2).',
+      'Acertar o placar EXATO vale 3 pontos. Se a partida for decidida nos pênaltis, acerte também quem avança para garantir 4 pontos!',
   },
   {
     icon: Users,

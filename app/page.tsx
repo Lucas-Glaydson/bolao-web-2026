@@ -7,7 +7,6 @@ import {
   TrendingUp,
   Clock,
   Shield,
-  Zap,
   Lock,
   ChevronRight
 } from 'lucide-react'
@@ -31,8 +30,8 @@ export default function Home() {
     },
     {
       icon: Award,
-      title: 'Bônus Placar Exato',
-      description: 'Acerte o placar exato (+2pts) ou empate com penálti correto (+3pts)',
+      title: 'Sistema de Pontuação',
+      description: 'Resultado: 1pt | Resultado + pênaltis: 2pts | Placar exato: 3pts | Placar exato + pênalti: 4pts',
       color: 'text-purple-500',
     },
     {
@@ -56,11 +55,10 @@ export default function Home() {
   ]
 
   const scoringRules = [
-    { phase: '16 avos', points: 1, badge: '16' },
-    { phase: 'Oitavas', points: 1, badge: '8' },
-    { phase: 'Quartas', points: 1, badge: '4' },
-    { phase: 'Semifinal', points: 2, badge: '2' },
-    { phase: 'Final', points: 2, badge: '🏆' },
+    { label: 'Resultado', points: 1, badge: '✅', description: 'Acertou o vencedor ou empate' },
+    { label: 'Resultado + Pênaltis', points: 2, badge: '⚽', description: 'Resultado correto e quem avança nos pênaltis' },
+    { label: 'Placar Exato', points: 3, badge: '🎯', description: 'Acertou o placar exato da partida' },
+    { label: 'Placar Exato + Pênalti', points: 4, badge: '🏆', description: 'Placar exato e quem avança nos pênaltis' },
   ]
 
   return (
@@ -150,7 +148,7 @@ export default function Home() {
             Sistema de Pontuação
           </h2>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             {scoringRules.map((rule, index) => (
               <Card key={index}>
                 <div className="p-6 text-center space-y-3">
@@ -158,10 +156,11 @@ export default function Home() {
                     <span className="text-xl font-bold text-green-500">{rule.badge}</span>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-sm text-slate-400">{rule.phase}</p>
+                    <p className="font-semibold text-slate-200">{rule.label}</p>
                     <p className="text-2xl font-bold text-green-500">
                       {rule.points} {rule.points === 1 ? 'ponto' : 'pontos'}
                     </p>
+                    <p className="text-xs text-slate-400">{rule.description}</p>
                   </div>
                 </div>
               </Card>
@@ -170,18 +169,7 @@ export default function Home() {
 
           <Card className="bg-gradient-to-br from-green-600/10 to-slate-900 border-green-600/30">
             <div className="p-8 text-center space-y-4">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-600/20 border border-green-600/50">
-                <Zap className="w-5 h-5 text-green-400" />
-                <span className="font-semibold text-green-400">Bônus Especial</span>
-              </div>
-              <h3 className="text-2xl font-bold">Placar Exato</h3>
-              <p className="text-lg text-slate-300 max-w-xl mx-auto">
-                Acerte o placar exato e ganhe{' '}
-                <span className="text-green-500 font-bold">+2 pontos extras</span>.
-                Em caso de empate, acertando também quem avança nos pênaltis:{' '}
-                <span className="text-blue-400 font-bold">+3 pontos</span>!
-              </p>
-              <div className="flex items-center justify-center gap-4 text-sm text-slate-400 pt-4">
+              <div className="flex items-center justify-center gap-4 text-sm text-slate-400">
                 <div className="flex items-center gap-2">
                   <Shield className="w-4 h-4" />
                   <span>Palpites travados 1h antes</span>

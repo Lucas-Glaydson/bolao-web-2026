@@ -193,9 +193,10 @@ export default function AllPredictionsPage() {
         <Card>
           <div className="p-4 flex flex-col justify-center gap-2">
             <div className="flex gap-2 flex-wrap text-xs">
-              <span className="px-2 py-1 rounded bg-blue-600 text-white font-medium">🏆 Empate + penálti (3pts)</span>
-              <span className="px-2 py-1 rounded bg-green-700 text-white font-medium">🎯 Placar exato (2pts)</span>
-              <span className="px-2 py-1 rounded bg-yellow-600 text-white font-medium">✅ Resultado certo (1pt)</span>
+              <span className="px-2 py-1 rounded bg-blue-600 text-white font-medium">🏆 Placar exato + pênalti (4pts)</span>
+              <span className="px-2 py-1 rounded bg-green-700 text-white font-medium">🎯 Placar exato (3pts)</span>
+              <span className="px-2 py-1 rounded bg-cyan-600 text-white font-medium">⚽ Resultado + pênaltis (2pts)</span>
+              <span className="px-2 py-1 rounded bg-yellow-600 text-white font-medium">✅ Resultado (1pt)</span>
               <span className="px-2 py-1 rounded bg-red-700/80 text-white font-medium">❌ Errou</span>
             </div>
             <p className="text-xs text-slate-400">Legenda de cores</p>
