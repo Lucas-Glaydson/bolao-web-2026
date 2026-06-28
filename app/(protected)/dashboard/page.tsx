@@ -220,20 +220,19 @@ export default function DashboardPage() {
         </div>
       </Card>
 
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Top 5 Ranking */}
-        <Card>
-          <CardHeader
-            title="Top 5 Ranking"
-            subtitle="Melhores pontuações do bolão"
-            action={
-              <Link href="/ranking">
-                <Button variant="ghost" size="sm">
-                  Ver Todos
-                </Button>
-              </Link>
-            }
-          />
+      {/* Top 5 Ranking */}
+      <Card>
+        <CardHeader
+          title="Top 5 Ranking"
+          subtitle="Melhores pontuações do bolão"
+          action={
+            <Link href="/ranking">
+              <Button variant="ghost" size="sm">
+                Ver Todos
+              </Button>
+            </Link>
+          }
+        />
           <div className="p-6 space-y-3">
             {topRanking.length === 0 ? (
               <p className="text-center text-slate-400 py-8">
@@ -263,195 +262,248 @@ export default function DashboardPage() {
           </div>
         </Card>
 
-        {/* Upcoming Matches with Prediction Forms */}
-        <Card>
-          <CardHeader
-            title="Próximas Partidas"
-            subtitle="Dê seus palpites diretamente aqui"
-            action={
-              <Link href="/predictions">
-                <Button variant="ghost" size="sm">
-                  Ver Todos
-                </Button>
-              </Link>
+      {/* Próximas Partidas — agrupadas por fase */}
+      {(() => {
+        const STAGE_ORDER = ['round_of_32', 'round_of_16', 'quarter_finals', 'semi_finals', 'final']
+
+        // Group by stage (preserve only known stages in order)
+        const grouped: Record<string, Match[]> = {}
+        upcomingMatches.forEach((m) => {
+          const stage = m.stage ?? 'unknown'
+          if (!grouped[stage]) grouped[stage] = []
+          grouped[stage].push(m)
+        })
+
+        // Sort matches within each stage by kickoffAt
+        Object.values(grouped).forEach((list) => list.sort((a, b) => new Date(a.kickoffAt).getTime() - new Date(b.kickoffAt).getTime()))
+
+        // Build ordered stage list: known stages first (in STAGE_ORDER), then any unknown stages
+        const orderedStages = [
+          ...STAGE_ORDER.filter((s) => grouped[s]),
+          ...Object.keys(grouped).filter((s) => !STAGE_ORDER.includes(s)),
+        ]
+
+        // Determine active stage: stage of the earliest future match
+        const now = Date.now()
+        let activeStage: string | null = null
+        let earliestFuture = Infinity
+        orderedStages.forEach((stage) => {
+          grouped[stage].forEach((m) => {
+            const t = new Date(m.kickoffAt).getTime()
+            if (t >= now && t < earliestFuture) {
+              earliestFuture = t
+              activeStage = stage
             }
-          />
-          <div className="p-6 space-y-4">
-            {upcomingMatches.length === 0 ? (
-              <p className="text-center text-slate-400 py-8">
-                Nenhuma partida próxima
-              </p>
-            ) : (
-              upcomingMatches.map((match) => {
-                const homeTeam = getTeamDisplayName(match.homeTeam)
-                const awayTeam = getTeamDisplayName(match.awayTeam)
-                const homeLogo = getTeamDisplayLogo(match.homeTeamLogo, match.homeTeam)
-                const awayLogo = getTeamDisplayLogo(match.awayTeamLogo, match.awayTeam)
-                const canPredict = canMakePrediction(match)
-                const matchId = match.id || match._id || ''
-                const existing = getPrediction(matchId)
-                const isEditing = selectedMatch === matchId
+          })
+        })
+        // Fallback: if all matches are in the past, use the last stage with matches
+        if (!activeStage && orderedStages.length > 0) activeStage = orderedStages[orderedStages.length - 1]
 
-                return (
-                  <div key={matchId} className="p-4 rounded-lg bg-slate-800/50 space-y-3">
-                    <div className="flex items-center justify-between flex-wrap gap-2">
-                      <Badge variant="default">{STAGE_LABELS[match.stage]}</Badge>
-                      <Badge className={STATUS_COLORS[match.status]}>
-                        {STATUS_LABELS[match.status]}
-                      </Badge>
-                    </div>
+        // Reorder so active stage comes first
+        const sortedStages = activeStage
+          ? [activeStage, ...orderedStages.filter((s) => s !== activeStage)]
+          : orderedStages
 
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <TeamLogo src={homeLogo} alt={homeTeam} className="w-8 h-8" teamName={match.homeTeam} />
-                        <span className="font-semibold truncate">{homeTeam}</span>
-                      </div>
-                      <span className="text-slate-500 font-bold">×</span>
-                      <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
-                        <span className="font-semibold truncate">{awayTeam}</span>
-                        <TeamLogo src={awayLogo} alt={awayTeam} className="w-8 h-8" teamName={match.awayTeam} />
-                      </div>
-                    </div>
+        const renderMatchCard = (match: Match) => {
+          const homeTeam = getTeamDisplayName(match.homeTeam)
+          const awayTeam = getTeamDisplayName(match.awayTeam)
+          const homeLogo = getTeamDisplayLogo(match.homeTeamLogo, match.homeTeam)
+          const awayLogo = getTeamDisplayLogo(match.awayTeamLogo, match.awayTeam)
+          const canPredict = canMakePrediction(match)
+          const matchId = match.id || match._id || ''
+          const existing = getPrediction(matchId)
+          const isEditing = selectedMatch === matchId
 
-                    <div className="flex items-center gap-2 text-xs text-slate-400">
-                      <Clock className="w-3 h-3" />
-                      {formatKickoff(match.kickoffAt)}
-                    </div>
+          return (
+            <div key={matchId} className="p-4 rounded-lg bg-slate-800/50 space-y-3">
+              <div className="flex items-center justify-end">
+                <Badge className={STATUS_COLORS[match.status]}>
+                  {STATUS_LABELS[match.status]}
+                </Badge>
+              </div>
 
-                    {/* Existing prediction (not editing) */}
-                    {existing && !isEditing && (
-                      <div className="flex items-center justify-between p-2 rounded bg-slate-700/50">
-                        <span className="text-xs text-slate-400">Seu palpite:</span>
-                        <span className="font-bold">
-                          {existing.predictedHomeScore ?? existing.homeScore} × {existing.predictedAwayScore ?? existing.awayScore}
-                        </span>
-                        {canPredict && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-xs h-6 px-2"
-                            onClick={() => {
-                              setSelectedMatch(matchId)
-                              setHomeScore(String(existing.predictedHomeScore ?? existing.homeScore ?? ''))
-                              setAwayScore(String(existing.predictedAwayScore ?? existing.awayScore ?? ''))
-                              setTiebreakWinner(existing.tiebreakWinner ?? null)
-                            }}
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <TeamLogo src={homeLogo} alt={homeTeam} className="w-8 h-8" teamName={match.homeTeam} />
+                  <span className="font-semibold truncate">{homeTeam}</span>
+                </div>
+                <span className="text-slate-500 font-bold">×</span>
+                <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
+                  <span className="font-semibold truncate">{awayTeam}</span>
+                  <TeamLogo src={awayLogo} alt={awayTeam} className="w-8 h-8" teamName={match.awayTeam} />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 text-xs text-slate-400">
+                <Clock className="w-3 h-3" />
+                {formatKickoff(match.kickoffAt)}
+              </div>
+
+              {/* Existing prediction (not editing) */}
+              {existing && !isEditing && (
+                <div className="flex items-center justify-between p-2 rounded bg-slate-700/50">
+                  <span className="text-xs text-slate-400">Seu palpite:</span>
+                  <span className="font-bold">
+                    {existing.predictedHomeScore ?? existing.homeScore} × {existing.predictedAwayScore ?? existing.awayScore}
+                  </span>
+                  {canPredict && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs h-6 px-2"
+                      onClick={() => {
+                        setSelectedMatch(matchId)
+                        setHomeScore(String(existing.predictedHomeScore ?? existing.homeScore ?? ''))
+                        setAwayScore(String(existing.predictedAwayScore ?? existing.awayScore ?? ''))
+                        setTiebreakWinner(existing.tiebreakWinner ?? null)
+                      }}
+                    >
+                      Editar
+                    </Button>
+                  )}
+                </div>
+              )}
+
+              {/* Prediction form */}
+              {canPredict && (!existing || isEditing) && (
+                <div className="space-y-2">
+                  <div className="grid grid-cols-3 gap-2 items-center">
+                    <Input
+                      type="number"
+                      min="0"
+                      placeholder="0"
+                      value={selectedMatch === matchId ? homeScore : ''}
+                      onFocus={() => {
+                        if (selectedMatch !== matchId) {
+                          setSelectedMatch(matchId)
+                          setHomeScore('')
+                          setAwayScore('')
+                          setTiebreakWinner(null)
+                        }
+                      }}
+                      onChange={(e) => { setHomeScore(e.target.value); setTiebreakWinner(null) }}
+                      className="text-center"
+                    />
+                    <span className="text-center text-slate-400">×</span>
+                    <Input
+                      type="number"
+                      min="0"
+                      placeholder="0"
+                      value={selectedMatch === matchId ? awayScore : ''}
+                      onFocus={() => {
+                        if (selectedMatch !== matchId) {
+                          setSelectedMatch(matchId)
+                          setHomeScore('')
+                          setAwayScore('')
+                          setTiebreakWinner(null)
+                        }
+                      }}
+                      onChange={(e) => { setAwayScore(e.target.value); setTiebreakWinner(null) }}
+                      className="text-center"
+                    />
+                  </div>
+
+                  {/* Tiebreaker: empate em fase eliminatória */}
+                  {selectedMatch === matchId &&
+                    homeScore !== '' && awayScore !== '' &&
+                    parseInt(homeScore) === parseInt(awayScore) &&
+                    isKnockoutStage(match) && (
+                      <div className="space-y-1.5">
+                        <p className="text-xs text-slate-400 text-center">Empate — Quem avança nos pênaltis?</p>
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setTiebreakWinner('home')}
+                            className={`py-1.5 px-2 rounded-lg text-xs font-semibold border transition-colors ${
+                              tiebreakWinner === 'home'
+                                ? 'bg-green-600 border-green-500 text-white'
+                                : 'bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600'
+                            }`}
                           >
-                            Editar
-                          </Button>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Prediction form */}
-                    {canPredict && (!existing || isEditing) && (
-                      <div className="space-y-2">
-                        <div className="grid grid-cols-3 gap-2 items-center">
-                          <Input
-                            type="number"
-                            min="0"
-                            placeholder="0"
-                            value={selectedMatch === matchId ? homeScore : ''}
-                            onFocus={() => {
-                              if (selectedMatch !== matchId) {
-                                setSelectedMatch(matchId)
-                                setHomeScore('')
-                                setAwayScore('')
-                                setTiebreakWinner(null)
-                              }
-                            }}
-                            onChange={(e) => { setHomeScore(e.target.value); setTiebreakWinner(null) }}
-                            className="text-center"
-                          />
-                          <span className="text-center text-slate-400">×</span>
-                          <Input
-                            type="number"
-                            min="0"
-                            placeholder="0"
-                            value={selectedMatch === matchId ? awayScore : ''}
-                            onFocus={() => {
-                              if (selectedMatch !== matchId) {
-                                setSelectedMatch(matchId)
-                                setHomeScore('')
-                                setAwayScore('')
-                                setTiebreakWinner(null)
-                              }
-                            }}
-                            onChange={(e) => { setAwayScore(e.target.value); setTiebreakWinner(null) }}
-                            className="text-center"
-                          />
-                        </div>
-
-                        {/* Tiebreaker: empate em fase eliminatória */}
-                        {selectedMatch === matchId &&
-                          homeScore !== '' && awayScore !== '' &&
-                          parseInt(homeScore) === parseInt(awayScore) &&
-                          isKnockoutStage(match) && (
-                            <div className="space-y-1.5">
-                              <p className="text-xs text-slate-400 text-center">Empate — Quem avança nos pênaltis?</p>
-                              <div className="grid grid-cols-2 gap-2">
-                                <button
-                                  type="button"
-                                  onClick={() => setTiebreakWinner('home')}
-                                  className={`py-1.5 px-2 rounded-lg text-xs font-semibold border transition-colors ${
-                                    tiebreakWinner === 'home'
-                                      ? 'bg-green-600 border-green-500 text-white'
-                                      : 'bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600'
-                                  }`}
-                                >
-                                  {homeTeam}
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => setTiebreakWinner('away')}
-                                  className={`py-1.5 px-2 rounded-lg text-xs font-semibold border transition-colors ${
-                                    tiebreakWinner === 'away'
-                                      ? 'bg-green-600 border-green-500 text-white'
-                                      : 'bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600'
-                                  }`}
-                                >
-                                  {awayTeam}
-                                </button>
-                              </div>
-                            </div>
-                          )}
-
-                        <div className="flex gap-2">
-                          <Button
-                            variant="primary"
-                            size="sm"
-                            className="flex-1"
-                            isLoading={submitting && selectedMatch === matchId}
-                            onClick={() => handleSubmitPrediction(matchId)}
+                            {homeTeam}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setTiebreakWinner('away')}
+                            className={`py-1.5 px-2 rounded-lg text-xs font-semibold border transition-colors ${
+                              tiebreakWinner === 'away'
+                                ? 'bg-green-600 border-green-500 text-white'
+                                : 'bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600'
+                            }`}
                           >
-                            {existing ? 'Atualizar' : 'Salvar Palpite'}
-                          </Button>
-                          {isEditing && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => { setSelectedMatch(null); setHomeScore(''); setAwayScore('') }}
-                            >
-                              Cancelar
-                            </Button>
-                          )}
+                            {awayTeam}
+                          </button>
                         </div>
                       </div>
                     )}
 
-                    {!canPredict && !existing && (
-                      <div className="flex items-center justify-center gap-2 p-2 rounded bg-slate-800/50">
-                        <Lock className="w-3 h-3 text-slate-500" />
-                        <span className="text-xs text-slate-500">Palpites encerrados</span>
-                      </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      className="flex-1"
+                      isLoading={submitting && selectedMatch === matchId}
+                      onClick={() => handleSubmitPrediction(matchId)}
+                    >
+                      {existing ? 'Atualizar' : 'Salvar Palpite'}
+                    </Button>
+                    {isEditing && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => { setSelectedMatch(null); setHomeScore(''); setAwayScore('') }}
+                      >
+                        Cancelar
+                      </Button>
                     )}
                   </div>
-                )
-              })
+                </div>
+              )}
+
+              {!canPredict && !existing && (
+                <div className="flex items-center justify-center gap-2 p-2 rounded bg-slate-800/50">
+                  <Lock className="w-3 h-3 text-slate-500" />
+                  <span className="text-xs text-slate-500">Palpites encerrados</span>
+                </div>
+              )}
+            </div>
+          )
+        }
+
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-semibold">Próximas Partidas</h2>
+                <p className="text-sm text-slate-400">Dê seus palpites diretamente aqui</p>
+              </div>
+              <Link href="/predictions">
+                <Button variant="ghost" size="sm">Ver Todos</Button>
+              </Link>
+            </div>
+
+            {upcomingMatches.length === 0 ? (
+              <Card>
+                <div className="p-6 text-center text-slate-400">
+                  Nenhuma partida próxima
+                </div>
+              </Card>
+            ) : (
+              sortedStages.map((stage) => (
+                <Card key={stage}>
+                  <CardHeader
+                    title={STAGE_LABELS[stage] ?? stage}
+                    subtitle={`${grouped[stage].length} partida${grouped[stage].length !== 1 ? 's' : ''}${stage === activeStage ? ' · fase atual' : ''}`}
+                  />
+                  <div className="p-6 space-y-4">
+                    {grouped[stage].map(renderMatchCard)}
+                  </div>
+                </Card>
+              ))
             )}
           </div>
-        </Card>
-      </div>
+        )
+      })()}
 
       {/* All Predictions Matrix */}
       {boardData.length > 0 && (() => {
