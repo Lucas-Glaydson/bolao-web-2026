@@ -30,8 +30,8 @@ export function Navbar({ onMenuClick }: NavbarProps) {
             <Image
               src="/logo.png"
               alt={APP_CONFIG.NAME}
-              width={38}
-              height={38}
+              width={36}
+              height={36}
               className="rounded"
               priority
             />
