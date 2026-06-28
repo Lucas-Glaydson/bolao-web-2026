@@ -8,6 +8,7 @@ import { LoadingSpinner } from '@/components/ui/loading'
 import { TeamLogo } from '@/components/ui/team-logo'
 import { matchService } from '@/lib/api/matches'
 import { predictionService } from '@/lib/api/predictions'
+import { SyncMatchesButton } from '@/components/admin/sync-matches-button'
 import { getTeamDisplayName, isMatchLive } from '@/lib/match-utils'
 import type { Match, PredictionWithDetails } from '@/lib/types'
 
@@ -275,6 +276,7 @@ export default function BracketPage() {
           >
             🎯 Meus Palpites
           </Button>
+          <SyncMatchesButton compact onSynced={fetchData} />
           <Button size="sm" variant="outline" onClick={fetchData}>
             <RefreshCw className="w-4 h-4" />
           </Button>

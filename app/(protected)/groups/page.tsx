@@ -9,6 +9,7 @@ import { LoadingSpinner } from '@/components/ui/loading'
 import { TeamLogo } from '@/components/ui/team-logo'
 import { groupService } from '@/lib/api/groups'
 import { isMatchLive } from '@/lib/match-utils'
+import { SyncMatchesButton } from '@/components/admin/sync-matches-button'
 import type { Match, GroupStanding, GroupLabel } from '@/lib/types'
 
 export default function GroupStagePage() {
@@ -89,10 +90,13 @@ export default function GroupStagePage() {
           <h1 className="text-2xl sm:text-3xl font-bold mb-2">Fase de Grupos</h1>
           <p className="text-slate-400">Classificação e resultados dos 12 grupos</p>
         </div>
-        <Button variant="outline" size="sm" onClick={fetchData} disabled={isLoading}>
-          <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-          Atualizar
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <SyncMatchesButton compact onSynced={fetchData} />
+          <Button variant="outline" size="sm" onClick={fetchData} disabled={isLoading}>
+            <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            Atualizar
+          </Button>
+        </div>
       </div>
 
       {/* All Groups Grid */}

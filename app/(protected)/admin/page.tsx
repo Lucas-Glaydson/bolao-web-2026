@@ -6,7 +6,9 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/lib/store/auth'
 import { stageService } from '@/lib/api/stages'
+import { matchService } from '@/lib/api/matches'
 import { GenerateKnockoutButton } from '@/components/admin/generate-knockout-button'
+import { SyncMatchesButton } from '@/components/admin/sync-matches-button'
 import type { StageControl } from '@/lib/types'
 import { STAGE_LABELS } from '@/lib/constants'
 import toast from 'react-hot-toast'
@@ -26,6 +28,8 @@ export default function AdminPage() {
       return
     }
     fetchStages()
+    // Sincroniza placares automaticamente ao carregar o painel admin
+    matchService.syncMatches().catch(() => {/* silencioso */})
   }, [user])
 
   async function fetchStages() {
@@ -126,6 +130,9 @@ export default function AdminPage() {
           )}
         </div>
       </Card>
+
+      {/* Sincronizar placares */}
+      <SyncMatchesButton />
 
       {/* Gerar fase eliminatória */}
       <GenerateKnockoutButton />
