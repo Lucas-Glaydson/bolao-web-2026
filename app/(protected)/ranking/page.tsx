@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { LoadingSpinner } from '@/components/ui/loading'
 import { rankingService } from '@/lib/api/ranking'
+import { statsService } from '@/lib/api/stats'
 import type { RankingEntry } from '@/lib/types'
 
 export default function RankingPage() {
@@ -16,9 +17,17 @@ export default function RankingPage() {
   useEffect(() => {
     const fetchRanking = async () => {
       try {
-        const data = await rankingService.getRanking()
-        setRanking(data)
-        setTotalUsers(data.length)
+        const [data, stats] = await Promise.allSettled([
+          rankingService.getRanking(),
+          statsService.getDashboard(),
+        ])
+        if (data.status === 'fulfilled') setRanking(data.value)
+        // totalUsers: prefer backend stats (includes 0-point users), fallback to ranking length
+        if (stats.status === 'fulfilled' && stats.value.totalUsers > 0) {
+          setTotalUsers(stats.value.totalUsers)
+        } else if (data.status === 'fulfilled') {
+          setTotalUsers(data.value.length)
+        }
       } catch (error) {
         console.error('Error fetching ranking:', error)
       } finally {
@@ -188,6 +197,15 @@ export default function RankingPage() {
             <div className="text-center py-12">
               <TrendingUp className="w-16 h-16 text-slate-600 mx-auto mb-4" />
               <p className="text-slate-400">Ainda não há dados de ranking</p>
+            </div>
+          )}
+
+          {/* Users with 0 points not in ranking */}
+          {totalUsers > ranking.length && (
+            <div className="mt-4 pt-4 border-t border-slate-800 text-center">
+              <p className="text-sm text-slate-500">
+                + {totalUsers - ranking.length} participante{totalUsers - ranking.length !== 1 ? 's' : ''} ainda sem pontos
+              </p>
             </div>
           )}
         </div>
