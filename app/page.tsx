@@ -32,7 +32,7 @@ export default function Home() {
     {
       icon: Award,
       title: 'Bônus Placar Exato',
-      description: 'Acerte o placar exato e ganhe +2 pontos extras',
+      description: 'Acerte o placar exato (+2pts) ou empate com penálti correto (+3pts)',
       color: 'text-purple-500',
     },
     {
@@ -176,8 +176,10 @@ export default function Home() {
               </div>
               <h3 className="text-2xl font-bold">Placar Exato</h3>
               <p className="text-lg text-slate-300 max-w-xl mx-auto">
-                Acerte o placar exato da partida e ganhe{' '}
-                <span className="text-green-500 font-bold">+2 pontos extras</span>!
+                Acerte o placar exato e ganhe{' '}
+                <span className="text-green-500 font-bold">+2 pontos extras</span>.
+                Em caso de empate, acertando também quem avança nos pênaltis:{' '}
+                <span className="text-blue-400 font-bold">+3 pontos</span>!
               </p>
               <div className="flex items-center justify-center gap-4 text-sm text-slate-400 pt-4">
                 <div className="flex items-center gap-2">

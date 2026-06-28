@@ -43,13 +43,17 @@ function formatMatchTime(kickoffAt: string): string {
 function cellStyle(pred: PredictionWithUser | undefined, match: Match): string {
   if (!pred) return ''
   if (match.status !== 'finished') return 'bg-slate-700/60 text-slate-200'
-  if (pred.exactScoreHit) return 'bg-green-700 text-white'
-  if (pred.outcomeHit) return 'bg-yellow-600 text-white'
+  const isDraw = pred.predictedHomeScore === pred.predictedAwayScore
+  if (pred.exactScoreHit && isDraw && pred.tiebreakWinner) return 'bg-blue-600 text-white'  // 3 pts
+  if (pred.exactScoreHit) return 'bg-green-700 text-white'  // 2 pts
+  if (pred.outcomeHit) return 'bg-yellow-600 text-white'   // 1 pt
   return 'bg-red-700/80 text-white'
 }
 
 function cellIcon(pred: PredictionWithUser | undefined, match: Match): string {
   if (!pred || match.status !== 'finished') return ''
+  const isDraw = pred.predictedHomeScore === pred.predictedAwayScore
+  if (pred.exactScoreHit && isDraw && pred.tiebreakWinner) return ' 🏆'
   if (pred.exactScoreHit) return ' 🎯'
   if (pred.outcomeHit) return ' ✅'
   return ' ❌'
@@ -189,8 +193,9 @@ export default function AllPredictionsPage() {
         <Card>
           <div className="p-4 flex flex-col justify-center gap-2">
             <div className="flex gap-2 flex-wrap text-xs">
-              <span className="px-2 py-1 rounded bg-green-700 text-white font-medium">🎯 Placar exato</span>
-              <span className="px-2 py-1 rounded bg-yellow-600 text-white font-medium">✅ Resultado certo</span>
+              <span className="px-2 py-1 rounded bg-blue-600 text-white font-medium">🏆 Empate + penálti (3pts)</span>
+              <span className="px-2 py-1 rounded bg-green-700 text-white font-medium">🎯 Placar exato (2pts)</span>
+              <span className="px-2 py-1 rounded bg-yellow-600 text-white font-medium">✅ Resultado certo (1pt)</span>
               <span className="px-2 py-1 rounded bg-red-700/80 text-white font-medium">❌ Errou</span>
             </div>
             <p className="text-xs text-slate-400">Legenda de cores</p>
@@ -278,9 +283,14 @@ export default function AllPredictionsPage() {
                             return (
                               <td key={matchId} className="py-2.5 px-2 text-center border-r border-b border-slate-800/50 last:border-r-0">
                                 {pred ? (
-                                  <span className={`inline-block px-1.5 py-0.5 rounded font-mono font-bold ${cellStyle(pred, match)}`}>
-                                    {pred.predictedHomeScore}×{pred.predictedAwayScore}{cellIcon(pred, match)}
-                                  </span>
+                                  <div className={`inline-flex flex-col items-center px-1.5 py-0.5 rounded ${cellStyle(pred, match)}`}>
+                                    <span className="font-mono font-bold text-xs">{pred.predictedHomeScore}×{pred.predictedAwayScore}{cellIcon(pred, match)}</span>
+                                    {pred.tiebreakWinner && pred.predictedHomeScore === pred.predictedAwayScore && (
+                                      <span className="text-[9px] opacity-80 leading-tight">
+                                        {pred.tiebreakWinner === 'home' ? '⬆ casa' : '⬆ fora'}
+                                      </span>
+                                    )}
+                                  </div>
                                 ) : (
                                   <span className="text-slate-600 font-mono">--</span>
                                 )}
