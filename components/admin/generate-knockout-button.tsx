@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Zap, CheckCircle, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -10,6 +11,7 @@ import toast from 'react-hot-toast'
 
 export function GenerateKnockoutButton() {
   const { user } = useAuthStore()
+  const router = useRouter()
   const [isGenerating, setIsGenerating] = useState(false)
   const [result, setResult] = useState<{
     generated: number
@@ -26,13 +28,23 @@ export function GenerateKnockoutButton() {
     setIsGenerating(true)
     try {
       const response = await groupService.generateKnockout()
-      setResult(response)
+      const generated = response?.generated ?? 0
+      const updated = response?.updated ?? 0
+      const message = response?.message ?? 'Operação concluída'
 
-      if (response.generated > 0 || response.updated > 0) {
-        toast.success(`16 avos gerados! ${response.generated} novos, ${response.updated} atualizados`)
+      setResult({ generated, updated, message })
+
+      if (generated > 0 || updated > 0) {
+        toast.success(`16 avos gerados! ${generated} novos, ${updated} atualizados`)
       } else {
-        toast.success('Nenhuma alteração necessária')
+        toast.success('Confrontos já estão atualizados')
       }
+
+      // Recarrega a página para buscar os jogos atualizados da API
+      setTimeout(() => {
+        router.refresh()
+        router.push('/bracket')
+      }, 1500)
     } catch (error: any) {
       const errorMessage = error?.message || error?.error || 'Erro ao gerar fase eliminatória'
       toast.error(errorMessage)
