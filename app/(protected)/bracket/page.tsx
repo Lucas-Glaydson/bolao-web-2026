@@ -52,8 +52,12 @@ function BracketSlot({
     ? (match?.officialAwayScore ?? null)
     : (pred?.predictedAwayScore ?? null)
   const live = match?.status === 'live'
-  const homeWon = hs !== null && as_ !== null && hs > as_
-  const awayWon = hs !== null && as_ !== null && as_ > hs
+  // For penalty matches in real mode, scores are equal — use penaltyWinner to highlight the advancing team
+  const penaltyHome = viewMode === 'real' ? match?.penaltyWinner === 'home' : pred?.tiebreakWinner === 'home'
+  const penaltyAway = viewMode === 'real' ? match?.penaltyWinner === 'away' : pred?.tiebreakWinner === 'away'
+  const isDraw = hs !== null && as_ !== null && hs === as_
+  const homeWon = (hs !== null && as_ !== null && hs > as_) || (isDraw && penaltyHome)
+  const awayWon = (hs !== null && as_ !== null && as_ > hs) || (isDraw && penaltyAway)
 
   return (
     <div
@@ -352,15 +356,17 @@ export default function BracketPage() {
                 viewMode={viewMode}
                 pred={fin ? predsMap.get(fin.id || fin._id || '') : undefined}
               />
-              {fin?.winner && viewMode === 'real' && (
-                <div className="text-[10px] text-green-400 font-semibold text-center">
-                  🏆 {fin.winner === 'home'
-                    ? getTeamDisplayName(fin.homeTeam)
-                    : fin.winner === 'away'
-                      ? getTeamDisplayName(fin.awayTeam)
-                      : '–'}
-                </div>
-              )}
+              {fin?.winner && viewMode === 'real' && (() => {
+                const advancing = fin.winner === 'home' || fin.winner === 'away'
+                  ? fin.winner
+                  : fin.penaltyWinner
+                return advancing ? (
+                  <div className="text-[10px] text-green-400 font-semibold text-center">
+                    🏆 {getTeamDisplayName(advancing === 'home' ? fin.homeTeam : fin.awayTeam)}
+                    {fin.penaltyWinner && <span className="text-yellow-400"> (pên.)</span>}
+                  </div>
+                ) : null
+              })()}
             </div>
 
             {/* ════ RIGHT HALF ════ */}

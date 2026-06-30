@@ -78,6 +78,16 @@ export function isKnockoutStage(match: Match): boolean {
 }
 
 /**
+ * Retorna qual time avançou numa partida de mata-mata finalizada.
+ * Em jogos decididos nos pênaltis, winner === 'draw' e o avanço é dado por penaltyWinner.
+ */
+export function getAdvancingTeam(match: Match): 'home' | 'away' | null {
+  if (match.winner === 'home' || match.winner === 'away') return match.winner
+  if (match.winner === 'draw') return match.penaltyWinner
+  return null
+}
+
+/**
  * Obtém placar formatado
  */
 export function getScore(match: Match): string {

@@ -59,6 +59,7 @@ export interface Match {
   manualHomeScore: number | null
   manualAwayScore: number | null
   winner: MatchWinner
+  penaltyWinner: 'home' | 'away' | null
   canPredict: boolean
   syncedAt: string
   createdAt: string

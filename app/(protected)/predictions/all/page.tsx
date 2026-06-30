@@ -43,17 +43,17 @@ function formatMatchTime(kickoffAt: string): string {
 function cellStyle(pred: PredictionWithUser | undefined, match: Match): string {
   if (!pred) return ''
   if (match.status !== 'finished') return 'bg-slate-700/60 text-slate-200'
-  const isDraw = pred.predictedHomeScore === pred.predictedAwayScore
-  if (pred.exactScoreHit && isDraw && pred.tiebreakWinner) return 'bg-blue-600 text-white'  // 3 pts
-  if (pred.exactScoreHit) return 'bg-green-700 text-white'  // 2 pts
-  if (pred.outcomeHit) return 'bg-yellow-600 text-white'   // 1 pt
+  const gotTiebreakRight = match.penaltyWinner !== null && pred.tiebreakWinner === match.penaltyWinner
+  if (pred.exactScoreHit && gotTiebreakRight) return 'bg-blue-600 text-white'  // exact + penalty
+  if (pred.exactScoreHit) return 'bg-green-700 text-white'  // exact score
+  if (pred.outcomeHit) return 'bg-yellow-600 text-white'   // outcome only
   return 'bg-red-700/80 text-white'
 }
 
 function cellIcon(pred: PredictionWithUser | undefined, match: Match): string {
   if (!pred || match.status !== 'finished') return ''
-  const isDraw = pred.predictedHomeScore === pred.predictedAwayScore
-  if (pred.exactScoreHit && isDraw && pred.tiebreakWinner) return ' 🏆'
+  const gotTiebreakRight = match.penaltyWinner !== null && pred.tiebreakWinner === match.penaltyWinner
+  if (pred.exactScoreHit && gotTiebreakRight) return ' 🏆'
   if (pred.exactScoreHit) return ' 🎯'
   if (pred.outcomeHit) return ' ✅'
   return ' ❌'

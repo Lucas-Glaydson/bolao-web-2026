@@ -9,7 +9,6 @@ import { Navbar } from '@/components/navigation/navbar'
 import { Sidebar } from '@/components/navigation/sidebar'
 import { BottomNav } from '@/components/navigation/bottom-nav'
 import { OnboardingModal } from '@/components/onboarding/onboarding-modal'
-import { NotificationPrompt } from '@/components/ui/notification-prompt'
 
 export default function ProtectedLayout({
   children,
@@ -62,7 +61,6 @@ export default function ProtectedLayout({
 
         <BottomNav />
         <OnboardingModal />
-        <NotificationPrompt />
       </div>
     </ProtectedRoute>
   )

@@ -44,6 +44,9 @@ class ApiService {
         if (error.response?.status === 401 && typeof window !== 'undefined') {
           localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN)
           localStorage.removeItem(STORAGE_KEYS.USER_DATA)
+          // Clear cookies too
+          document.cookie = `${STORAGE_KEYS.AUTH_TOKEN}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;SameSite=Strict`
+          document.cookie = `${STORAGE_KEYS.USER_DATA}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;SameSite=Strict`
           window.location.href = '/login'
         }
 
