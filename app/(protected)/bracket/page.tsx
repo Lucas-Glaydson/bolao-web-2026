@@ -55,6 +55,25 @@ function r32Game(arr: Match[], fifaNum: number): Match | null {
   ) ?? null
 }
 
+/**
+ * Se o mapeamento explícito retornar tudo null (formato de roundLabel inesperado),
+ * cai para ordenação por bracketSeq e fatiamento posicional — ao menos exibe times.
+ */
+function withFallback(
+  slots: (Match | null)[],
+  arr: Match[],
+  start: number,
+  count: number,
+): (Match | null)[] {
+  if (arr.length > 0 && slots.every(s => s === null)) {
+    const sorted = [...arr].sort((a, b) => bracketSeq(a.roundLabel) - bracketSeq(b.roundLabel))
+    const slice: (Match | null)[] = sorted.slice(start, start + count)
+    while (slice.length < count) slice.push(null)
+    return slice
+  }
+  return slots
+}
+
 // ─── Match slot card ────────────────────────────────────────────────────────
 function BracketSlot({
   match, viewMode, pred,
@@ -240,29 +259,45 @@ export default function BracketPage() {
   const fin = ko.find(m => m.stage === 'final') ?? null
   const tp  = ko.find(m => m.stage === 'third_place') ?? null
 
+  // Debug: loga os primeiros jogos knockout para inspecionar o formato real
+  // da API (externalId, stage, roundLabel). Verificar no Console do browser.
+  if (ko.length > 0) {
+    console.log('[Bracket] knockout matches sample:', ko.slice(0, 5).map(m => ({
+      id: m.id,
+      externalId: m.externalId,
+      stage: m.stage,
+      roundLabel: m.roundLabel,
+      bracketSeq: bracketSeq(m.roundLabel),
+      homeTeam: m.homeTeam,
+    })))
+    console.log('[Bracket] stage counts:', {
+      round_of_32: r32Raw.length,
+      round_of_16: r16Raw.length,
+      quarter_finals: qf.length,
+      semi_finals: sf.length,
+      total_ko: ko.length,
+    })
+  }
+
   // Copa 2026: backend pode classificar os 16 jogos iniciais como round_of_16
   // (ao invés de round_of_32). Se round_of_32 está vazio e round_of_16 tem > 8
-  // jogos, os excedentes SÃO os 16 avos.
-  const r32 = r32Raw.length > 0 ? r32Raw : r16Raw.length > 8 ? r16Raw : r32Raw
-  const r16 = r32Raw.length > 0 ? r16Raw : r16Raw.length > 8 ? [] : r16Raw
+  // jogos, os excedentes SÃO os 16 avos. Se ambos vazios mas ko tem partidas,
+  // trata todas ko (exceto qf/sf/final) como r32.
+  const r32 = r32Raw.length > 0
+    ? r32Raw
+    : r16Raw.length > 8
+      ? r16Raw
+      : r32Raw
+  const r16 = r32Raw.length > 0
+    ? r16Raw
+    : r16Raw.length > 8 ? [] : r16Raw
 
   // ── Explicit slot mapping — FIFA 2026 official bracket ──────────────────
-  // r32Game() encontra J73–J88 independente de o backend usar numeração
-  // absoluta (externalId/roundLabel = 73–88) ou relativa (R32-1 a R32-16).
-  //
-  // LEFT SIDE — top to bottom:
-  //   J73 / J75  →  O1  ┐
-  //   J74 / J77  →  O2  ┤→ Q1 ─┐
-  //   J83 / J84  →  O3  ┐      ├→ S1
-  //   J81 / J82  →  O4  ┘→ Q2 ─┘
-  //
-  // RIGHT SIDE — top to bottom:
-  //   J76 / J78  →  O5  ┐
-  //   J79 / J80  →  O6  ┘→ Q3 ─┐
-  //   J86 / J88  →  O7  ┐      ├→ S2
-  //   J85 / J87  →  O8  ┘→ Q4 ─┘
+  // r32Game() encontra J73–J88 com 3 estratégias de busca.
+  // withFallback() garante que, se o mapeamento falhar (formato de roundLabel
+  // inesperado), os times ainda aparecem em ordem sequencial.
 
-  const r32L: (Match | null)[] = [
+  const r32L = withFallback([
     r32Game(r32, 73), // J73 — África do Sul vs Canadá
     r32Game(r32, 75), // J75 — Países Baixos vs Marrocos
     r32Game(r32, 74), // J74 — Alemanha vs Paraguai
@@ -271,9 +306,9 @@ export default function BracketPage() {
     r32Game(r32, 84), // J84 — Espanha vs Áustria
     r32Game(r32, 81), // J81 — EUA vs Bósnia
     r32Game(r32, 82), // J82 — Bélgica vs Senegal
-  ]
+  ], r32, 0, 8)
 
-  const r32R: (Match | null)[] = [
+  const r32R = withFallback([
     r32Game(r32, 76), // J76 — Brasil vs Japão
     r32Game(r32, 78), // J78 — Costa do Marfim vs Noruega
     r32Game(r32, 79), // J79 — México vs Equador
@@ -282,31 +317,31 @@ export default function BracketPage() {
     r32Game(r32, 88), // J88 — Austrália vs Egito
     r32Game(r32, 85), // J85 — Suíça vs Argélia
     r32Game(r32, 87), // J87 — Colômbia vs Gana
-  ]
+  ], r32, 8, 8)
 
-  const r16L: (Match | null)[] = [
+  const r16L = withFallback([
     bySeq(r16, 1), // O1 — W(J73) vs W(J75)
     bySeq(r16, 2), // O2 — W(J74) vs W(J77)
     bySeq(r16, 3), // O3 — W(J83) vs W(J84)
     bySeq(r16, 4), // O4 — W(J81) vs W(J82)
-  ]
+  ], r16, 0, 4)
 
-  const r16R: (Match | null)[] = [
+  const r16R = withFallback([
     bySeq(r16, 5), // O5 — W(J76) vs W(J78)
     bySeq(r16, 6), // O6 — W(J79) vs W(J80)
     bySeq(r16, 7), // O7 — W(J86) vs W(J88)
     bySeq(r16, 8), // O8 — W(J85) vs W(J87)
-  ]
+  ], r16, 4, 4)
 
-  const qfL: (Match | null)[] = [
+  const qfL = withFallback([
     bySeq(qf, 1), // Q1 — W(O1) vs W(O2)
     bySeq(qf, 2), // Q2 — W(O3) vs W(O4)
-  ]
+  ], qf, 0, 2)
 
-  const qfR: (Match | null)[] = [
+  const qfR = withFallback([
     bySeq(qf, 3), // Q3 — W(O5) vs W(O6)
     bySeq(qf, 4), // Q4 — W(O7) vs W(O8)
-  ]
+  ], qf, 2, 2)
 
   const sfL: (Match | null)[] = [bySeq(sf, 1) ?? sf[0] ?? null] // S1
   const sfR: (Match | null)[] = [bySeq(sf, 2) ?? sf[1] ?? null] // S2
