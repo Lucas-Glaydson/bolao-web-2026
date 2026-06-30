@@ -35,7 +35,7 @@ export interface LoginResponse {
 
 // Match Types
 export type GroupLabel = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K' | 'L'
-export type MatchStage = 'group_stage' | 'round_of_32' | 'round_of_16' | 'quarter_finals' | 'semi_finals' | 'final'
+export type MatchStage = 'group_stage' | 'round_of_32' | 'round_of_16' | 'quarter_finals' | 'semi_finals' | 'final' | 'third_place'
 export type MatchStatus = 'scheduled' | 'live' | 'finished' | 'postponed' | 'cancelled'
 export type MatchWinner = 'home' | 'away' | 'draw' | null
 

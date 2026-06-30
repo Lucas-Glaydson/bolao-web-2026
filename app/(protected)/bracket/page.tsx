@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Trophy, RefreshCw } from 'lucide-react'
+import { Trophy, RefreshCw, Medal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { LoadingSpinner } from '@/components/ui/loading'
@@ -20,19 +20,20 @@ const W = 140  // match card width (px)
 const C = 13   // connector strip width (px)
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
-// Extrai o ÚLTIMO número do roundLabel — ex: "16 Avos de Final - R32-3" → 3
+// Extrai o ÚLTIMO número do roundLabel — ex: "16 Avos de Final - R32-73" → 73
 function bracketSeq(label: string): number {
   const nums = (label ?? '').match(/\d+/g)
   return nums ? parseInt(nums[nums.length - 1]) : 99
 }
-function sortByNum(arr: Match[]) {
-  return [...arr].sort((a, b) => bracketSeq(a.roundLabel) - bracketSeq(b.roundLabel))
-}
 
-function padNull(arr: Match[], n: number): (Match | null)[] {
-  const r: (Match | null)[] = [...arr]
-  while (r.length < n) r.push(null)
-  return r
+/**
+ * Busca uma partida pelo número de sequência do seu roundLabel OU pelo externalId.
+ * Exemplo: bySeq(r32Matches, 73) encontra J73.
+ */
+function bySeq(arr: Match[], seq: number): Match | null {
+  return arr.find(
+    m => bracketSeq(m.roundLabel) === seq || m.externalId === String(seq)
+  ) ?? null
 }
 
 // ─── Match slot card ────────────────────────────────────────────────────────
@@ -211,51 +212,95 @@ export default function BracketPage() {
 
   if (isLoading) return <LoadingSpinner fullScreen text="Carregando chaveamento..." />
 
-  // ── Sort matches by stage and number ────────────────────────────────────
   const ko = matches.filter(m => m.stage !== 'group_stage')
 
-  // Fixed stages (names don't change)
-  const qfAll = sortByNum(ko.filter(m => m.stage === 'quarter_finals'))
-  const sfAll = ko.filter(m => m.stage === 'semi_finals')
+  const r32 = ko.filter(m => m.stage === 'round_of_32')
+  const r16 = ko.filter(m => m.stage === 'round_of_16')
+  const qf  = ko.filter(m => m.stage === 'quarter_finals')
+  const sf  = ko.filter(m => m.stage === 'semi_finals')
   const fin = ko.find(m => m.stage === 'final') ?? null
+  const tp  = ko.find(m => m.stage === 'third_place') ?? null
 
-  // First/second knockout rounds: detect flexibly.
-  // Backend may use 'round_of_32' OR 'round_of_16' for Copa 2026's "16 avos".
-  const r32Named = sortByNum(ko.filter(m => m.stage === 'round_of_32'))
-  const r16Named = sortByNum(ko.filter(m => m.stage === 'round_of_16'))
+  // ── Explicit slot mapping — FIFA 2026 official bracket ────────────────
+  // Each slot position is determined by the official game number (J73–J88),
+  // NOT by the array index from the API.
+  //
+  // LEFT SIDE — top to bottom
+  //   Top block:    J73 / J75  →  O1   ┐
+  //                 J74 / J77  →  O2   ┤→ Q1 ─┐
+  //   Bottom block: J83 / J84  →  O3   ┐      ├→ S1
+  //                 J81 / J82  →  O4   ┘→ Q2 ─┘
+  //
+  // RIGHT SIDE — top to bottom
+  //   Top block:    J76 / J78  →  O5   ┐
+  //                 J79 / J80  →  O6   ┘→ Q3 ─┐
+  //   Bottom block: J86 / J88  →  O7   ┐      ├→ S2
+  //                 J85 / J87  →  O8   ┘→ Q4 ─┘
+  //
+  // O1–O8  identified by bracketSeq or externalId 1–8   (round_of_16)
+  // Q1–Q4  identified by bracketSeq or externalId 1–4   (quarter_finals)
+  // S1–S2  identified by bracketSeq or externalId 1–2   (semi_finals)
 
-  // If round_of_32 is populated → use it. Otherwise fall back to count-based:
-  // round_of_16 with > 8 matches → those ARE the "16 avos" (all 16 are treated as r32).
-  // round_of_16 with ≤ 8 matches → standard oitavas only.
-  const r32All = r32Named.length > 0
-    ? r32Named
-    : r16Named.length > 8 ? r16Named : []
-  const r16All = r32Named.length > 0
-    ? r16Named
-    : r16Named.length > 8 ? [] : r16Named
+  const r32L: (Match | null)[] = [
+    bySeq(r32, 73), // J73 — África do Sul vs Canadá
+    bySeq(r32, 75), // J75 — Países Baixos vs Marrocos
+    bySeq(r32, 74), // J74 — Alemanha vs Paraguai
+    bySeq(r32, 77), // J77 — França vs Suécia
+    bySeq(r32, 83), // J83 — Portugal vs Croácia
+    bySeq(r32, 84), // J84 — Espanha vs Áustria
+    bySeq(r32, 81), // J81 — EUA vs Bósnia
+    bySeq(r32, 82), // J82 — Bélgica vs Senegal
+  ]
 
-  const hasR32 = r32All.length > 0
-  // Se 16 avos existem, sempre exibe oitavas (mesmo vazia) — Copa 2026 sempre tem as duas fases
-  const hasR16 = r16All.length > 0 || hasR32
+  const r32R: (Match | null)[] = [
+    bySeq(r32, 76), // J76 — Brasil vs Japão
+    bySeq(r32, 78), // J78 — Costa do Marfim vs Noruega
+    bySeq(r32, 79), // J79 — México vs Equador
+    bySeq(r32, 80), // J80 — Inglaterra vs RD Congo
+    bySeq(r32, 86), // J86 — Argentina vs Cabo Verde
+    bySeq(r32, 88), // J88 — Austrália vs Egito
+    bySeq(r32, 85), // J85 — Suíça vs Argélia
+    bySeq(r32, 87), // J87 — Colômbia vs Gana
+  ]
 
-  // ── Split into left (1-8) and right (9-16) halves ───────────────────────
-  const r32L = padNull(r32All.slice(0, 8), 8)
-  const r32R = padNull(r32All.slice(8, 16), 8)
-  const r16L = padNull(r16All.slice(0, 4), 4)
-  const r16R = padNull(r16All.slice(4, 8), 4)
-  const qfL = padNull(qfAll.slice(0, 2), 2)
-  const qfR = padNull(qfAll.slice(2, 4), 2)
-  const sfL: (Match | null)[] = [sfAll[0] ?? null]
-  const sfR: (Match | null)[] = [sfAll[1] ?? null]
+  const r16L: (Match | null)[] = [
+    bySeq(r16, 1), // O1 — W(J73) vs W(J75)
+    bySeq(r16, 2), // O2 — W(J74) vs W(J77)
+    bySeq(r16, 3), // O3 — W(J83) vs W(J84)
+    bySeq(r16, 4), // O4 — W(J81) vs W(J82)
+  ]
+
+  const r16R: (Match | null)[] = [
+    bySeq(r16, 5), // O5 — W(J76) vs W(J78)
+    bySeq(r16, 6), // O6 — W(J79) vs W(J80)
+    bySeq(r16, 7), // O7 — W(J86) vs W(J88)
+    bySeq(r16, 8), // O8 — W(J85) vs W(J87)
+  ]
+
+  const qfL: (Match | null)[] = [
+    bySeq(qf, 1), // Q1 — W(O1) vs W(O2)
+    bySeq(qf, 2), // Q2 — W(O3) vs W(O4)
+  ]
+
+  const qfR: (Match | null)[] = [
+    bySeq(qf, 3), // Q3 — W(O5) vs W(O6)
+    bySeq(qf, 4), // Q4 — W(O7) vs W(O8)
+  ]
+
+  const sfL: (Match | null)[] = [bySeq(sf, 1) ?? sf[0] ?? null] // S1
+  const sfR: (Match | null)[] = [bySeq(sf, 2) ?? sf[1] ?? null] // S2
+
+  const hasR32 = r32.length > 0
+  const hasR16 = r16.length > 0
 
   const predsMap = new Map(predictions.map(p => [p.matchId, p]))
   const totalH = S * 8  // 576px
 
   // ── Column label widths ─────────────────────────────────────────────────
-  const r32LabelW = W + C               // slots + arm
-  const r16LabelW = C + W + C           // inlet + slots + arm
-  const qfLabelW = C + W + C
-  const sfLabelW = C + W + C
+  const r32LabelW = W + C
+  const r16LabelW = C + W + C
+  const qfLabelW  = C + W + C
+  const sfLabelW  = C + W + C
   const finalLabelW = W
 
   return (
@@ -401,6 +446,19 @@ export default function BracketPage() {
             <Trophy className="w-16 h-16 text-slate-600 mx-auto mb-4" />
             <p>Nenhuma partida do mata-mata disponível ainda.</p>
             <p className="text-sm mt-1">O chaveamento aparece aqui assim que a fase eliminatória começar.</p>
+          </div>
+        </Card>
+      )}
+
+      {/* Third place */}
+      {tp && (
+        <Card>
+          <div className="p-4 flex flex-col items-center gap-2">
+            <div className="flex items-center gap-2 text-slate-400 text-xs font-semibold uppercase tracking-wide">
+              <Medal className="w-4 h-4 text-amber-500" />
+              Disputa do 3º Lugar
+            </div>
+            <BracketSlot match={tp} viewMode={viewMode} pred={predsMap.get(tp.id || tp._id || '')} />
           </div>
         </Card>
       )}
