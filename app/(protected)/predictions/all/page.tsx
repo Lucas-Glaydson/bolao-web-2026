@@ -46,6 +46,7 @@ function cellStyle(pred: PredictionWithUser | undefined, match: Match): string {
   const gotTiebreakRight = match.penaltyWinner !== null && pred.tiebreakWinner === match.penaltyWinner
   if (pred.exactScoreHit && gotTiebreakRight) return 'bg-blue-600 text-white'  // exact + penalty
   if (pred.exactScoreHit) return 'bg-green-700 text-white'  // exact score
+  if (pred.outcomeHit && gotTiebreakRight) return 'bg-cyan-600 text-white'   // outcome + penalty
   if (pred.outcomeHit) return 'bg-yellow-600 text-white'   // outcome only
   return 'bg-red-700/80 text-white'
 }
@@ -55,6 +56,7 @@ function cellIcon(pred: PredictionWithUser | undefined, match: Match): string {
   const gotTiebreakRight = match.penaltyWinner !== null && pred.tiebreakWinner === match.penaltyWinner
   if (pred.exactScoreHit && gotTiebreakRight) return ' 🏆'
   if (pred.exactScoreHit) return ' 🎯'
+  if (pred.outcomeHit && gotTiebreakRight) return ' ⚽'
   if (pred.outcomeHit) return ' ✅'
   return ' ❌'
 }
