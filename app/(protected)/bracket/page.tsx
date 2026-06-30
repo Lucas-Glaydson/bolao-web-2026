@@ -20,19 +20,38 @@ const W = 140  // match card width (px)
 const C = 13   // connector strip width (px)
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
-// Extrai o ÚLTIMO número do roundLabel — ex: "16 Avos de Final - R32-73" → 73
+// Extrai o ÚLTIMO número do roundLabel — ex: "16 Avos de Final - R32-3" → 3
 function bracketSeq(label: string): number {
   const nums = (label ?? '').match(/\d+/g)
   return nums ? parseInt(nums[nums.length - 1]) : 99
 }
 
 /**
- * Busca uma partida pelo número de sequência do seu roundLabel OU pelo externalId.
- * Exemplo: bySeq(r32Matches, 73) encontra J73.
+ * Busca uma partida pelo número de sequência dentro de um stage.
+ * Tenta: externalId, bracketSeq(roundLabel) direto.
+ * Usado para R16 (1-8), QF (1-4), SF (1-2).
  */
 function bySeq(arr: Match[], seq: number): Match | null {
   return arr.find(
-    m => bracketSeq(m.roundLabel) === seq || m.externalId === String(seq)
+    m => m.externalId === String(seq) || bracketSeq(m.roundLabel) === seq
+  ) ?? null
+}
+
+/**
+ * Busca uma partida do 16 avos pelo número FIFA oficial (J73–J88).
+ *
+ * Tenta em ordem:
+ * 1. externalId === "73" (API usa numeração absoluta FIFA)
+ * 2. bracketSeq(roundLabel) === 73 (roundLabel termina em 73)
+ * 3. bracketSeq(roundLabel) === relPos onde relPos = fifaNum - 72
+ *    (API usa numeração relativa: R32-1 = J73, R32-16 = J88)
+ */
+function r32Game(arr: Match[], fifaNum: number): Match | null {
+  const relPos = fifaNum - 72 // J73→1, J74→2, ..., J88→16
+  return arr.find(m =>
+    m.externalId === String(fifaNum) ||
+    bracketSeq(m.roundLabel) === fifaNum ||
+    bracketSeq(m.roundLabel) === relPos
   ) ?? null
 }
 
@@ -214,53 +233,55 @@ export default function BracketPage() {
 
   const ko = matches.filter(m => m.stage !== 'group_stage')
 
-  const r32 = ko.filter(m => m.stage === 'round_of_32')
-  const r16 = ko.filter(m => m.stage === 'round_of_16')
+  const r32Raw = ko.filter(m => m.stage === 'round_of_32')
+  const r16Raw = ko.filter(m => m.stage === 'round_of_16')
   const qf  = ko.filter(m => m.stage === 'quarter_finals')
   const sf  = ko.filter(m => m.stage === 'semi_finals')
   const fin = ko.find(m => m.stage === 'final') ?? null
   const tp  = ko.find(m => m.stage === 'third_place') ?? null
 
-  // ── Explicit slot mapping — FIFA 2026 official bracket ────────────────
-  // Each slot position is determined by the official game number (J73–J88),
-  // NOT by the array index from the API.
+  // Copa 2026: backend pode classificar os 16 jogos iniciais como round_of_16
+  // (ao invés de round_of_32). Se round_of_32 está vazio e round_of_16 tem > 8
+  // jogos, os excedentes SÃO os 16 avos.
+  const r32 = r32Raw.length > 0 ? r32Raw : r16Raw.length > 8 ? r16Raw : r32Raw
+  const r16 = r32Raw.length > 0 ? r16Raw : r16Raw.length > 8 ? [] : r16Raw
+
+  // ── Explicit slot mapping — FIFA 2026 official bracket ──────────────────
+  // r32Game() encontra J73–J88 independente de o backend usar numeração
+  // absoluta (externalId/roundLabel = 73–88) ou relativa (R32-1 a R32-16).
   //
-  // LEFT SIDE — top to bottom
-  //   Top block:    J73 / J75  →  O1   ┐
-  //                 J74 / J77  →  O2   ┤→ Q1 ─┐
-  //   Bottom block: J83 / J84  →  O3   ┐      ├→ S1
-  //                 J81 / J82  →  O4   ┘→ Q2 ─┘
+  // LEFT SIDE — top to bottom:
+  //   J73 / J75  →  O1  ┐
+  //   J74 / J77  →  O2  ┤→ Q1 ─┐
+  //   J83 / J84  →  O3  ┐      ├→ S1
+  //   J81 / J82  →  O4  ┘→ Q2 ─┘
   //
-  // RIGHT SIDE — top to bottom
-  //   Top block:    J76 / J78  →  O5   ┐
-  //                 J79 / J80  →  O6   ┘→ Q3 ─┐
-  //   Bottom block: J86 / J88  →  O7   ┐      ├→ S2
-  //                 J85 / J87  →  O8   ┘→ Q4 ─┘
-  //
-  // O1–O8  identified by bracketSeq or externalId 1–8   (round_of_16)
-  // Q1–Q4  identified by bracketSeq or externalId 1–4   (quarter_finals)
-  // S1–S2  identified by bracketSeq or externalId 1–2   (semi_finals)
+  // RIGHT SIDE — top to bottom:
+  //   J76 / J78  →  O5  ┐
+  //   J79 / J80  →  O6  ┘→ Q3 ─┐
+  //   J86 / J88  →  O7  ┐      ├→ S2
+  //   J85 / J87  →  O8  ┘→ Q4 ─┘
 
   const r32L: (Match | null)[] = [
-    bySeq(r32, 73), // J73 — África do Sul vs Canadá
-    bySeq(r32, 75), // J75 — Países Baixos vs Marrocos
-    bySeq(r32, 74), // J74 — Alemanha vs Paraguai
-    bySeq(r32, 77), // J77 — França vs Suécia
-    bySeq(r32, 83), // J83 — Portugal vs Croácia
-    bySeq(r32, 84), // J84 — Espanha vs Áustria
-    bySeq(r32, 81), // J81 — EUA vs Bósnia
-    bySeq(r32, 82), // J82 — Bélgica vs Senegal
+    r32Game(r32, 73), // J73 — África do Sul vs Canadá
+    r32Game(r32, 75), // J75 — Países Baixos vs Marrocos
+    r32Game(r32, 74), // J74 — Alemanha vs Paraguai
+    r32Game(r32, 77), // J77 — França vs Suécia
+    r32Game(r32, 83), // J83 — Portugal vs Croácia
+    r32Game(r32, 84), // J84 — Espanha vs Áustria
+    r32Game(r32, 81), // J81 — EUA vs Bósnia
+    r32Game(r32, 82), // J82 — Bélgica vs Senegal
   ]
 
   const r32R: (Match | null)[] = [
-    bySeq(r32, 76), // J76 — Brasil vs Japão
-    bySeq(r32, 78), // J78 — Costa do Marfim vs Noruega
-    bySeq(r32, 79), // J79 — México vs Equador
-    bySeq(r32, 80), // J80 — Inglaterra vs RD Congo
-    bySeq(r32, 86), // J86 — Argentina vs Cabo Verde
-    bySeq(r32, 88), // J88 — Austrália vs Egito
-    bySeq(r32, 85), // J85 — Suíça vs Argélia
-    bySeq(r32, 87), // J87 — Colômbia vs Gana
+    r32Game(r32, 76), // J76 — Brasil vs Japão
+    r32Game(r32, 78), // J78 — Costa do Marfim vs Noruega
+    r32Game(r32, 79), // J79 — México vs Equador
+    r32Game(r32, 80), // J80 — Inglaterra vs RD Congo
+    r32Game(r32, 86), // J86 — Argentina vs Cabo Verde
+    r32Game(r32, 88), // J88 — Austrália vs Egito
+    r32Game(r32, 85), // J85 — Suíça vs Argélia
+    r32Game(r32, 87), // J87 — Colômbia vs Gana
   ]
 
   const r16L: (Match | null)[] = [
