@@ -27,8 +27,24 @@ function bracketSeq(label: string): number {
 }
 
 /**
+ * Finds a match by the two teams involved — independent of home/away order.
+ * Tolerant of partial name matches (e.g. "United States" ≈ "USA").
+ * Primary strategy for round_of_32 where ALL matches share the same roundLabel.
+ */
+function byTeams(arr: Match[], teamA: string, teamB: string): Match | null {
+  const a = teamA.toLowerCase()
+  const b = teamB.toLowerCase()
+  return arr.find(m => {
+    const mh = m.homeTeam.toLowerCase()
+    const ma = m.awayTeam.toLowerCase()
+    const fwd = (mh.includes(a) || a.includes(mh)) && (ma.includes(b) || b.includes(ma))
+    const rev = (mh.includes(b) || b.includes(mh)) && (ma.includes(a) || a.includes(ma))
+    return fwd || rev
+  }) ?? null
+}
+
+/**
  * Busca uma partida pelo número de sequência dentro de um stage.
- * Tenta: externalId, bracketSeq(roundLabel) direto.
  * Usado para R16 (1-8), QF (1-4), SF (1-2).
  */
 function bySeq(arr: Match[], seq: number): Match | null {
@@ -38,26 +54,8 @@ function bySeq(arr: Match[], seq: number): Match | null {
 }
 
 /**
- * Busca uma partida do 16 avos pelo número FIFA oficial (J73–J88).
- *
- * Tenta em ordem:
- * 1. externalId === "73" (API usa numeração absoluta FIFA)
- * 2. bracketSeq(roundLabel) === 73 (roundLabel termina em 73)
- * 3. bracketSeq(roundLabel) === relPos onde relPos = fifaNum - 72
- *    (API usa numeração relativa: R32-1 = J73, R32-16 = J88)
- */
-function r32Game(arr: Match[], fifaNum: number): Match | null {
-  const relPos = fifaNum - 72 // J73→1, J74→2, ..., J88→16
-  return arr.find(m =>
-    m.externalId === String(fifaNum) ||
-    bracketSeq(m.roundLabel) === fifaNum ||
-    bracketSeq(m.roundLabel) === relPos
-  ) ?? null
-}
-
-/**
- * Se o mapeamento explícito retornar tudo null (formato de roundLabel inesperado),
- * cai para ordenação por bracketSeq e fatiamento posicional — ao menos exibe times.
+ * Se o mapeamento explícito retornar tudo null, cai para ordenação por
+ * externalId numérico e fatiamento posicional — ao menos exibe times.
  */
 function withFallback(
   slots: (Match | null)[],
@@ -66,7 +64,7 @@ function withFallback(
   count: number,
 ): (Match | null)[] {
   if (arr.length > 0 && slots.every(s => s === null)) {
-    const sorted = [...arr].sort((a, b) => bracketSeq(a.roundLabel) - bracketSeq(b.roundLabel))
+    const sorted = [...arr].sort((a, b) => parseInt(a.externalId) - parseInt(b.externalId))
     const slice: (Match | null)[] = sorted.slice(start, start + count)
     while (slice.length < count) slice.push(null)
     return slice
@@ -293,58 +291,75 @@ export default function BracketPage() {
     : r16Raw.length > 8 ? [] : r16Raw
 
   // ── Explicit slot mapping — FIFA 2026 official bracket ──────────────────
-  // r32Game() encontra J73–J88 com 3 estratégias de busca.
-  // withFallback() garante que, se o mapeamento falhar (formato de roundLabel
-  // inesperado), os times ainda aparecem em ordem sequencial.
+  // r32: identified by team names (API roundLabel is "Rodada de 32" for ALL
+  //   matches — bracketSeq is useless here; externalId is a football-API number).
+  // r16/qf/sf: bySeq first, withFallback by sorted externalId if bySeq fails.
+  //
+  // LEFT SIDE — top to bottom:
+  //   J73 / J75  →  O1  ┐
+  //   J74 / J77  →  O2  ┤→ Q1 ─┐
+  //   J83 / J84  →  O3  ┐      ├→ S1
+  //   J81 / J82  →  O4  ┘→ Q2 ─┘
+  //
+  // RIGHT SIDE — top to bottom:
+  //   J76 / J78  →  O5  ┐
+  //   J79 / J80  →  O6  ┘→ Q3 ─┐
+  //   J86 / J88  →  O7  ┐      ├→ S2
+  //   J85 / J87  →  O8  ┘→ Q4 ─┘
+
+  // API may pre-load extra placeholder matches per stage; cap to expected counts.
+  const r16sorted = [...r16].sort((a, b) => parseInt(a.externalId) - parseInt(b.externalId)).slice(0, 8)
+  const qfSorted  = [...qf].sort((a, b) => parseInt(a.externalId) - parseInt(b.externalId)).slice(0, 4)
+  const sfSorted  = [...sf].sort((a, b) => parseInt(a.externalId) - parseInt(b.externalId)).slice(0, 2)
 
   const r32L = withFallback([
-    r32Game(r32, 73), // J73 — África do Sul vs Canadá
-    r32Game(r32, 75), // J75 — Países Baixos vs Marrocos
-    r32Game(r32, 74), // J74 — Alemanha vs Paraguai
-    r32Game(r32, 77), // J77 — França vs Suécia
-    r32Game(r32, 83), // J83 — Portugal vs Croácia
-    r32Game(r32, 84), // J84 — Espanha vs Áustria
-    r32Game(r32, 81), // J81 — EUA vs Bósnia
-    r32Game(r32, 82), // J82 — Bélgica vs Senegal
+    byTeams(r32, 'South Africa', 'Canada'),       // J73
+    byTeams(r32, 'Netherlands', 'Morocco'),        // J75
+    byTeams(r32, 'Germany', 'Paraguay'),           // J74
+    byTeams(r32, 'France', 'Sweden'),              // J77
+    byTeams(r32, 'Portugal', 'Croatia'),           // J83
+    byTeams(r32, 'Spain', 'Austria'),              // J84
+    byTeams(r32, 'United States', 'Bosnia'),       // J81
+    byTeams(r32, 'Belgium', 'Senegal'),            // J82
   ], r32, 0, 8)
 
   const r32R = withFallback([
-    r32Game(r32, 76), // J76 — Brasil vs Japão
-    r32Game(r32, 78), // J78 — Costa do Marfim vs Noruega
-    r32Game(r32, 79), // J79 — México vs Equador
-    r32Game(r32, 80), // J80 — Inglaterra vs RD Congo
-    r32Game(r32, 86), // J86 — Argentina vs Cabo Verde
-    r32Game(r32, 88), // J88 — Austrália vs Egito
-    r32Game(r32, 85), // J85 — Suíça vs Argélia
-    r32Game(r32, 87), // J87 — Colômbia vs Gana
+    byTeams(r32, 'Brazil', 'Japan'),               // J76
+    byTeams(r32, 'Ivory Coast', 'Norway'),         // J78
+    byTeams(r32, 'Mexico', 'Ecuador'),             // J79
+    byTeams(r32, 'England', 'Congo'),              // J80 — "DR Congo" / "Congo DR"
+    byTeams(r32, 'Argentina', 'Cape Verde'),       // J86
+    byTeams(r32, 'Australia', 'Egypt'),            // J88
+    byTeams(r32, 'Switzerland', 'Algeria'),        // J85
+    byTeams(r32, 'Colombia', 'Ghana'),             // J87
   ], r32, 8, 8)
 
   const r16L = withFallback([
-    bySeq(r16, 1), // O1 — W(J73) vs W(J75)
-    bySeq(r16, 2), // O2 — W(J74) vs W(J77)
-    bySeq(r16, 3), // O3 — W(J83) vs W(J84)
-    bySeq(r16, 4), // O4 — W(J81) vs W(J82)
-  ], r16, 0, 4)
+    bySeq(r16sorted, 1), // O1 — W(J73) vs W(J75)
+    bySeq(r16sorted, 2), // O2 — W(J74) vs W(J77)
+    bySeq(r16sorted, 3), // O3 — W(J83) vs W(J84)
+    bySeq(r16sorted, 4), // O4 — W(J81) vs W(J82)
+  ], r16sorted, 0, 4)
 
   const r16R = withFallback([
-    bySeq(r16, 5), // O5 — W(J76) vs W(J78)
-    bySeq(r16, 6), // O6 — W(J79) vs W(J80)
-    bySeq(r16, 7), // O7 — W(J86) vs W(J88)
-    bySeq(r16, 8), // O8 — W(J85) vs W(J87)
-  ], r16, 4, 4)
+    bySeq(r16sorted, 5), // O5 — W(J76) vs W(J78)
+    bySeq(r16sorted, 6), // O6 — W(J79) vs W(J80)
+    bySeq(r16sorted, 7), // O7 — W(J86) vs W(J88)
+    bySeq(r16sorted, 8), // O8 — W(J85) vs W(J87)
+  ], r16sorted, 4, 4)
 
   const qfL = withFallback([
-    bySeq(qf, 1), // Q1 — W(O1) vs W(O2)
-    bySeq(qf, 2), // Q2 — W(O3) vs W(O4)
-  ], qf, 0, 2)
+    bySeq(qfSorted, 1), // Q1 — W(O1) vs W(O2)
+    bySeq(qfSorted, 2), // Q2 — W(O3) vs W(O4)
+  ], qfSorted, 0, 2)
 
   const qfR = withFallback([
-    bySeq(qf, 3), // Q3 — W(O5) vs W(O6)
-    bySeq(qf, 4), // Q4 — W(O7) vs W(O8)
-  ], qf, 2, 2)
+    bySeq(qfSorted, 3), // Q3 — W(O5) vs W(O6)
+    bySeq(qfSorted, 4), // Q4 — W(O7) vs W(O8)
+  ], qfSorted, 2, 2)
 
-  const sfL: (Match | null)[] = [bySeq(sf, 1) ?? sf[0] ?? null] // S1
-  const sfR: (Match | null)[] = [bySeq(sf, 2) ?? sf[1] ?? null] // S2
+  const sfL: (Match | null)[] = [bySeq(sfSorted, 1) ?? sfSorted[0] ?? null] // S1
+  const sfR: (Match | null)[] = [bySeq(sfSorted, 2) ?? sfSorted[1] ?? null] // S2
 
   const hasR32 = r32.length > 0
   const hasR16 = r16.length > 0
