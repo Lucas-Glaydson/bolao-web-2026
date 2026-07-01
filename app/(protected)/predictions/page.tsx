@@ -205,7 +205,7 @@ export default function MyPredictionsPage() {
                       <div className="p-3 rounded-lg bg-slate-700/50">
                         <p className="text-sm text-slate-400 mb-2">Seu palpite:</p>
                         <p className="text-xl font-bold text-center">
-                          {existingPrediction.homeScore || existingPrediction.predictedHomeScore} × {existingPrediction.awayScore || existingPrediction.predictedAwayScore}
+                          {existingPrediction.predictedHomeScore ?? existingPrediction.homeScore} × {existingPrediction.predictedAwayScore ?? existingPrediction.awayScore}
                         </p>
                         {existingPrediction.tiebreakWinner && (
                           <p className="text-sm text-center text-slate-400 mt-1">
@@ -221,8 +221,8 @@ export default function MyPredictionsPage() {
                             className="w-full mt-2"
                             onClick={() => {
                               setSelectedMatch(matchId)
-                              setHomeScore((existingPrediction.homeScore || existingPrediction.predictedHomeScore).toString())
-                              setAwayScore((existingPrediction.awayScore || existingPrediction.predictedAwayScore).toString())
+                              setHomeScore((existingPrediction.predictedHomeScore ?? existingPrediction.homeScore ?? 0).toString())
+                              setAwayScore((existingPrediction.predictedAwayScore ?? existingPrediction.awayScore ?? 0).toString())
                               setTiebreakWinner(existingPrediction.tiebreakWinner ?? null)
                             }}
                           >
@@ -401,7 +401,7 @@ export default function MyPredictionsPage() {
                         <div>
                           <p className="text-sm text-slate-400 mb-1">Seu Palpite</p>
                           <p className="font-semibold">
-                            {prediction.homeScore || prediction.predictedHomeScore} × {prediction.awayScore || prediction.predictedAwayScore}
+                            {prediction.predictedHomeScore ?? prediction.homeScore} × {prediction.predictedAwayScore ?? prediction.awayScore}
                           </p>
                         </div>
 
