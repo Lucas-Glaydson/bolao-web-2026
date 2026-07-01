@@ -212,6 +212,15 @@ export interface StageControl {
   displayOrder: number
 }
 
+// Score Rules
+export interface ScoreRule {
+  id: string
+  stage: MatchStage
+  basePoints: number
+  exactScoreBonus: number
+  active: boolean
+}
+
 // Type aliases for API v3 compatibility
 export type PredictionResponse = Prediction
 export type StandingsResponse = GroupStandingsResponse

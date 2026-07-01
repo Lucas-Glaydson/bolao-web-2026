@@ -52,4 +52,12 @@ export const matchService = {
     const { data } = await api.post<{ synced: number; message: string }>('/matches/sync')
     return data
   },
+
+  /**
+   * Admin: Recalcular pontos de uma partida específica
+   */
+  async recalculateMatchPoints(matchId: string): Promise<{ processed: number; errors: number; message: string }> {
+    const { data } = await api.post<{ processed: number; errors: number; message: string }>(`/matches/${matchId}/recalculate-points`)
+    return data
+  },
 }

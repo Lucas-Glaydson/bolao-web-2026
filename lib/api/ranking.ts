@@ -1,5 +1,5 @@
 import { api } from './client'
-import type { RankingEntry, Scoreboard } from '@/lib/types'
+import type { RankingEntry, Scoreboard, ScoreRule } from '@/lib/types'
 import { APP_CONFIG } from '@/lib/constants'
 import { MOCK_RANKING } from '@/lib/mock-data'
 
@@ -24,6 +24,22 @@ export const rankingService = {
    */
   async recalculatePoints(): Promise<{ message: string; recalculated: number }> {
     const { data } = await api.post<{ message: string; recalculated: number }>('/ranking/recalculate')
+    return data
+  },
+
+  /**
+   * Admin: Listar regras de pontuação por fase
+   */
+  async getScoreRules(): Promise<ScoreRule[]> {
+    const { data } = await api.get<ScoreRule[]>('/ranking/score-rules')
+    return data
+  },
+
+  /**
+   * Admin: Atualizar regra de pontuação de uma fase
+   */
+  async updateScoreRule(id: string, body: Partial<Pick<ScoreRule, 'basePoints' | 'exactScoreBonus' | 'active'>>): Promise<ScoreRule> {
+    const { data } = await api.patch<ScoreRule>(`/ranking/score-rules/${id}`, body)
     return data
   },
 }

@@ -10,6 +10,8 @@ import { matchService } from '@/lib/api/matches'
 import { GenerateKnockoutButton } from '@/components/admin/generate-knockout-button'
 import { SyncMatchesButton } from '@/components/admin/sync-matches-button'
 import { RecalculatePointsButton } from '@/components/admin/recalculate-points-button'
+import { RecalculateMatchPoints } from '@/components/admin/recalculate-match-points'
+import { ScoreRulesManager } from '@/components/admin/score-rules-manager'
 import type { StageControl } from '@/lib/types'
 import { STAGE_LABELS } from '@/lib/constants'
 import toast from 'react-hot-toast'
@@ -137,6 +139,12 @@ export default function AdminPage() {
 
       {/* Recalcular pontuação */}
       <RecalculatePointsButton />
+
+      {/* Recalcular partida específica */}
+      <RecalculateMatchPoints />
+
+      {/* Regras de pontuação */}
+      <ScoreRulesManager />
 
       {/* Gerar fase eliminatória */}
       <GenerateKnockoutButton />
