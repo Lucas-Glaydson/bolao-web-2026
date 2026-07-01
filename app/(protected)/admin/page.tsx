@@ -9,6 +9,7 @@ import { stageService } from '@/lib/api/stages'
 import { matchService } from '@/lib/api/matches'
 import { GenerateKnockoutButton } from '@/components/admin/generate-knockout-button'
 import { SyncMatchesButton } from '@/components/admin/sync-matches-button'
+import { RecalculatePointsButton } from '@/components/admin/recalculate-points-button'
 import type { StageControl } from '@/lib/types'
 import { STAGE_LABELS } from '@/lib/constants'
 import toast from 'react-hot-toast'
@@ -133,6 +134,9 @@ export default function AdminPage() {
 
       {/* Sincronizar placares */}
       <SyncMatchesButton />
+
+      {/* Recalcular pontuação */}
+      <RecalculatePointsButton />
 
       {/* Gerar fase eliminatória */}
       <GenerateKnockoutButton />
