@@ -32,7 +32,7 @@ export default function AdminPage() {
     }
     fetchStages()
     // Sincroniza placares automaticamente ao carregar o painel admin
-    matchService.syncMatches().catch(() => {/* silencioso */})
+    matchService.syncMatches().catch(() => {/* silencioso */ })
   }, [user])
 
   async function fetchStages() {

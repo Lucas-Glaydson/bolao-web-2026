@@ -23,7 +23,7 @@ export const rankingService = {
    * Admin: Recalcular pontos de todos os palpites
    */
   async recalculatePoints(): Promise<{ message: string; recalculated: number }> {
-    const { data } = await api.get<{ message: string; recalculated: number }>('/ranking/recalculate')
+    const { data } = await api.post<{ message: string; recalculated: number }>('/ranking/recalculate')
     return data
   },
 

@@ -290,8 +290,8 @@ export default function MyPredictionsPage() {
                                   type="button"
                                   onClick={() => setTiebreakWinner('home')}
                                   className={`py-2 px-3 rounded-lg text-sm font-semibold border transition-colors ${tiebreakWinner === 'home'
-                                      ? 'bg-green-600 border-green-500 text-white'
-                                      : 'bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600'
+                                    ? 'bg-green-600 border-green-500 text-white'
+                                    : 'bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600'
                                     }`}
                                 >
                                   {homeTeam}
@@ -300,8 +300,8 @@ export default function MyPredictionsPage() {
                                   type="button"
                                   onClick={() => setTiebreakWinner('away')}
                                   className={`py-2 px-3 rounded-lg text-sm font-semibold border transition-colors ${tiebreakWinner === 'away'
-                                      ? 'bg-green-600 border-green-500 text-white'
-                                      : 'bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600'
+                                    ? 'bg-green-600 border-green-500 text-white'
+                                    : 'bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600'
                                     }`}
                                 >
                                   {awayTeam}
